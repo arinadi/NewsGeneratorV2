@@ -178,9 +178,23 @@ export default function EditorPanel({
                 {input.metadata.personsInvolved.map((person, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center px-2.5 py-1 text-xs bg-blue-50 text-blue-700 rounded-full border border-blue-100"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-blue-50 text-blue-700 rounded-full border border-blue-100 group"
                   >
                     {person}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = input.metadata.personsInvolved.filter((_, i) => i !== idx);
+                        setInput({
+                          ...input,
+                          metadata: { ...input.metadata, personsInvolved: updated, source: 'manual' },
+                        });
+                      }}
+                      className="ml-0.5 w-4 h-4 rounded-full hover:bg-blue-200 flex items-center justify-center text-blue-500 hover:text-blue-700 transition-colors"
+                      title="Hapus narasumber"
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
