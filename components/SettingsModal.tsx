@@ -1,7 +1,9 @@
 'use client';
 
-import { Settings2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings2, Cpu } from 'lucide-react';
 import { useApiKey } from '@/contexts/ApiKeyContext';
+import { AVAILABLE_MODELS, ModelId, GeminiService } from '@/services/GeminiService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -10,6 +12,23 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { apiKey, setApiKey } = useApiKey();
+  const [selectedModel, setSelectedModel] = useState<ModelId>('gemini-3-pro-preview');
+
+  // Load saved model on mount
+  useEffect(() => {
+    const saved = GeminiService.loadSavedModel();
+    if (saved) {
+      setSelectedModel(saved);
+    }
+  }, []);
+
+  const handleModelChange = (model: ModelId) => {
+    setSelectedModel(model);
+    // Save to localStorage
+    localStorage.setItem('kuli_tinta_model', model);
+    // Update static working model
+    GeminiService.loadSavedModel();
+  };
 
   if (!isOpen) return null;
 
@@ -34,6 +53,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         <div className="space-y-4">
+          {/* API Key Input */}
           <div className="space-y-2">
             <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
               Gemini API Key
@@ -45,6 +65,28 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               onChange={(e) => setApiKey(e.target.value)}
               className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
             />
+          </div>
+
+          {/* Model Selector */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1 flex items-center gap-1">
+              <Cpu className="w-3 h-3" />
+              Model AI
+            </label>
+            <select
+              value={selectedModel}
+              onChange={(e) => handleModelChange(e.target.value as ModelId)}
+              className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
+            >
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name} ({model.tier})
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-stone-400 ml-1">
+              Jika model gagal, akan otomatis fallback ke model berikutnya.
+            </p>
           </div>
 
           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">

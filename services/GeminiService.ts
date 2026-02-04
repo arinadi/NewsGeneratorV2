@@ -201,27 +201,101 @@ export function extractPotentialName(filename: string): string | null {
     return null;
 }
 
+// Available models in order of preference (fallback order)
+export const AVAILABLE_MODELS = [
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Preview)', tier: 'premium' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Preview)', tier: 'standard' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', tier: 'free' },
+] as const;
+
+export type ModelId = typeof AVAILABLE_MODELS[number]['id'];
+
 /**
- * GeminiService - Client-side AI service using Gemini 3 Pro
+ * GeminiService - Client-side AI service with model fallback
  * Uses 2-step generation: Body first, then Titles + Hashtags
  */
 export class GeminiService {
     private ai: GoogleGenAI;
+    private model: ModelId;
+    private static workingModel: ModelId | null = null;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, model?: ModelId) {
         this.ai = new GoogleGenAI({ apiKey });
+        // Use stored working model, passed model, or default
+        this.model = GeminiService.workingModel || model || 'gemini-3-pro-preview';
     }
 
     /**
-     * Private helper: Generate content with rate limiting
+     * Get the currently active model
+     */
+    getModel(): ModelId {
+        return this.model;
+    }
+
+    /**
+     * Set the model and save as working model
+     */
+    setModel(model: ModelId): void {
+        this.model = model;
+        GeminiService.workingModel = model;
+        // Persist to localStorage
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('kuli_tinta_model', model);
+        }
+    }
+
+    /**
+     * Load saved model from localStorage
+     */
+    static loadSavedModel(): ModelId | null {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('kuli_tinta_model');
+            if (saved && AVAILABLE_MODELS.some(m => m.id === saved)) {
+                GeminiService.workingModel = saved as ModelId;
+                return saved as ModelId;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Private helper: Generate content with rate limiting and model fallback
      */
     private async generate(contents: string): Promise<string> {
         return withRateLimit(async () => {
-            const response = await this.ai.models.generateContent({
-                model: 'gemini-3-pro-preview',
-                contents,
-            });
-            return response.text || '';
+            // Try current model first
+            const modelsToTry = [this.model, ...AVAILABLE_MODELS.map(m => m.id).filter(m => m !== this.model)];
+
+            for (const modelId of modelsToTry) {
+                try {
+                    console.log(`[GeminiService] Trying model: ${modelId}`);
+                    const response = await this.ai.models.generateContent({
+                        model: modelId,
+                        contents,
+                    });
+
+                    // If successful, save this model as working
+                    if (modelId !== this.model) {
+                        console.log(`[GeminiService] Fallback to ${modelId} successful, saving as default`);
+                        this.setModel(modelId);
+                    }
+
+                    return response.text || '';
+                } catch (error: unknown) {
+                    const err = error as Error & { status?: number };
+                    console.warn(`[GeminiService] Model ${modelId} failed:`, err.message);
+
+                    // If it's not a model-related error (e.g., rate limit), throw immediately
+                    if (err.status === 429) {
+                        throw error;
+                    }
+
+                    // Continue to next model
+                    continue;
+                }
+            }
+
+            throw new Error('All models failed. Please check your API key and try again.');
         });
     }
 
@@ -357,24 +431,44 @@ Contoh bukan nama: "Data Penting", "Rekaman Audio", "Jakarta Pusat"`;
     }
 
     /**
-     * Test API connection (bypasses rate limiter for quick check)
+     * Test API connection with model fallback
      */
-    async testConnection(): Promise<boolean> {
-        try {
-            const response = await this.ai.models.generateContent({
-                model: 'gemini-3-pro-preview',
-                contents: 'OK',
-            });
-            return !!response.text;
-        } catch {
-            return false;
+    async testConnection(): Promise<{ success: boolean; model: ModelId | null }> {
+        const modelsToTry = [this.model, ...AVAILABLE_MODELS.map(m => m.id).filter(m => m !== this.model)];
+
+        for (const modelId of modelsToTry) {
+            try {
+                console.log(`[GeminiService] Testing connection with: ${modelId}`);
+                const response = await this.ai.models.generateContent({
+                    model: modelId,
+                    contents: 'OK',
+                });
+
+                if (response.text) {
+                    // Save working model
+                    if (modelId !== this.model) {
+                        console.log(`[GeminiService] Found working model: ${modelId}`);
+                        this.setModel(modelId);
+                    }
+                    return { success: true, model: modelId };
+                }
+            } catch (error) {
+                console.warn(`[GeminiService] Model ${modelId} test failed`);
+                continue;
+            }
         }
+
+        return { success: false, model: null };
     }
 }
 
 /**
  * Helper function to create service instance
  */
-export function createGeminiService(apiKey: string): GeminiService {
-    return new GeminiService(apiKey);
+export function createGeminiService(apiKey: string, model?: ModelId): GeminiService {
+    // Load saved model if not provided
+    if (!model) {
+        GeminiService.loadSavedModel();
+    }
+    return new GeminiService(apiKey, model);
 }
