@@ -81,11 +81,17 @@ export default function PreviewPanel({
 
   const handleDownload = () => {
     const fullText = `${result.titles[0]}\n\n${result.body}\n\n${result.hashtags}`;
-    const blob = new Blob([fullText], { type: 'text/plain' });
+    const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `artikel-${Date.now()}.txt`;
+    // Create filename from title (sanitize special chars)
+    const safeTitle = result.titles[0]
+      .replace(/[^a-zA-Z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase()
+      .slice(0, 50);
+    a.download = `${safeTitle || 'artikel'}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -165,14 +171,14 @@ export default function PreviewPanel({
             <div
               key={idx}
               className={`relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${idx === 0
-                  ? 'before:bg-red-600'
-                  : 'before:bg-stone-200 opacity-60'
+                ? 'before:bg-red-600'
+                : 'before:bg-stone-200 opacity-60'
                 }`}
             >
               <h2
                 className={`font-headline leading-tight mb-1 ${idx === 0
-                    ? 'text-3xl font-bold text-slate-900'
-                    : 'text-xl font-semibold text-slate-600'
+                  ? 'text-3xl font-bold text-slate-900'
+                  : 'text-xl font-semibold text-slate-600'
                   }`}
               >
                 {t}

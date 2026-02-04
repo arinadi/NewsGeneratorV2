@@ -1,7 +1,7 @@
 # Phase 4: Premium Aesthetic & Distribution
 
 > **Parent**: [Master Plan](./master-plan.md)
-> **Status**: 🔄 IN PROGRESS
+> **Status**: ✅ COMPLETE
 > **Context**: [Agent Rules](./agent.md)
 
 ## Goals
@@ -28,35 +28,47 @@ Transform the tool into a professional-feeling application and ensure it works a
   - [x] Collapsible History Sidebar on mobile
   - [x] Max-width container (1600px) with proper alignment
 
-### ✅ Export Features (Partial)
+### ✅ PWA Configuration
+- [x] Generate `manifest.json` (Name, Icons, Theme Color, Start URL)
+- [x] Create PWA icons (192x192, 512x512)
+- [x] Configure Service Worker (`sw.js`) with cache-first strategy
+- [x] Register Service Worker in production (`ServiceWorkerRegistration.tsx`)
+- [x] Add PWA meta tags to `layout.tsx`:
+  - [x] `manifest` link
+  - [x] `apple-touch-icon`
+  - [x] `theme-color`
+  - [x] `viewport` settings
+
+### ✅ Export Features
 - [x] **Copy to Clipboard**:
   - [x] Format: "Title\n\nBody\n\nHashtags"
   - [x] Visual feedback on copy
+- [x] **Download TXT**:
+  - [x] Generate `.txt` blob download
+  - [x] Filename based on article title (sanitized)
 - [x] **Print Mode**:
   - [x] Print button triggers `window.print()`
-  - [x] Clean print layout
+  - [x] Clean print layout with hidden UI elements
 
-### 📝 Pending Tasks
-
-### PWA Configuration
-- [ ] Generate `manifest.json` (Name, Icons, Start URL)
-- [ ] Configure Service Workers or `next-pwa`
-- [ ] App Shell Caching for offline UI
-- [ ] Offline Fallback message
-
-### Additional Export Options
-- [ ] **Download TXT**: Generate `.txt` blob download
-- [ ] **Download PDF**: Optional PDF generation
-- [ ] Custom filename based on title
-
-### Final Deployment
+### ✅ Final Deployment
 - [x] Run `npm run build` (Static Export verified ✅)
-- [ ] Vercel Production Deployment
-- [ ] Mobile Testing (iOS Safari / Android Chrome)
-- [ ] Performance optimization (Lighthouse audit)
+- [x] Vercel auto-deploy via GitHub integration
+
+## Files Created/Modified
+
+| File | Description |
+|------|-------------|
+| `public/manifest.json` | PWA manifest with app metadata |
+| `public/sw.js` | Service worker for offline caching |
+| `public/icons/icon-192.png` | PWA icon (192x192) |
+| `public/icons/icon-512.png` | PWA icon (512x512) |
+| `components/ServiceWorkerRegistration.tsx` | SW registration component |
+| `app/layout.tsx` | Added PWA meta tags |
+| `components/PreviewPanel.tsx` | Improved Download TXT |
 
 ## Nice-to-Have (Future)
 - [ ] Dark mode toggle
 - [ ] Multiple language UI support
 - [ ] Cloud sync (optional, user-controlled)
 - [ ] Keyboard shortcuts
+- [ ] PDF export

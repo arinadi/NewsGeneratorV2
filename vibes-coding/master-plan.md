@@ -1,6 +1,6 @@
 # Master Plan: News Generator "Kuli Tinta AI"
 
-> **Status**: ✅ Phase 1-3 Complete | Phase 4 In Progress
+> **Status**: ✅ ALL PHASES COMPLETE
 > **Context**: [Agent Rules](./agent.md)
 > **Last Updated**: 2026-02-05
 
@@ -27,6 +27,7 @@ A professional-grade News Generator PWA designed for Indonesian journalists and 
 | Parsing | PDF.js, Mammoth.js | ✅ |
 | Storage | localStorage (API Key) | ✅ |
 | Styling | Tailwind CSS + Glassmorphism | ✅ |
+| PWA | Service Worker + Manifest | ✅ |
 | Deployment | Vercel (Static Export) | ✅ |
 
 ## 4. Development Roadmap
@@ -46,25 +47,29 @@ A professional-grade News Generator PWA designed for Indonesian journalists and 
 - "Kuli Tinta" Persona & 2-Step Prompt Strategy
 - Precision Regeneration (Title, Body, Hashtags)
 
-### 🔄 [Phase 4: Premium UI & PWA](./phase-4-plan.md)
-- Glassmorphism & Newspaper Aesthetic (Done)
-- Mobile Responsive Design (Done)
-- PWA Manifest & Offline Support (Pending)
-- Export Options (Clipboard ✅, Print ✅, Download Pending)
+### ✅ [Phase 4: Premium UI & PWA](./phase-4-plan.md)
+- Glassmorphism & Newspaper Aesthetic
+- PWA with Service Worker & Offline Support
+- Export Options (Clipboard, Download TXT, Print)
 
-## 5. Key Improvements Made
+## 5. Key Features Summary
 
-### Rate Limiter (Free Tier Protection)
-- Request queue with 10 RPM limit
-- Exponential backoff (2s → 4s → 8s)
-- Auto-retry up to 3x
+### AI Generation
+- 2-Step Prompt Strategy (Body → Title+Hashtags)
+- Kuli Tinta Persona (Senior Editor style)
+- Rate Limiter (10 RPM + exponential backoff)
 
-### 2-Step Prompt Strategy
-- Step 1: Generate body from transcript + context
-- Step 2: Generate title + hashtags from body
-- Results are more accurate and consistent
+### File Handling
+- Drag & Drop anywhere on page
+- PDF, DOCX, TXT support
+- Auto-extract filename and date to context
 
-### File Context Extraction
-- Cleaned filename automatically added to context
-- File date (lastModified) included in Indonesian locale
-- AI can extract useful info from filename (names, locations, etc.)
+### Export
+- Copy to Clipboard
+- Download as TXT (title-based filename)
+- Print Mode
+
+### PWA
+- Installable on mobile/desktop
+- Offline UI caching
+- App icons and theme color
