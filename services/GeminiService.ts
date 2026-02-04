@@ -33,20 +33,22 @@ export interface GeneratedNews {
 // Prompts
 const EXTRACTION_PROMPT = `Kamu adalah asisten jurnalis Indonesia yang bertugas mengekstrak metadata faktual dari teks berita.
 
-TUGAS: Ekstrak data faktual berikut dari teks yang diberikan.
+TUGAS: Ekstrak data faktual berikut dari SELURUH teks yang diberikan (termasuk bagian KONTEKS TAMBAHAN jika ada).
 
 FORMAT OUTPUT (JSON only, tanpa markdown code block):
 {
   "location": "Nama kota/tempat kejadian, atau kosong jika tidak disebutkan",
   "date": "Tanggal kejadian dalam format YYYY-MM-DD, atau kosong jika tidak disebutkan",
-  "personsInvolved": ["Nama orang 1", "Nama orang 2"]
+  "personsInvolved": ["Nama lengkap orang 1", "Nama lengkap orang 2"]
 }
 
 ATURAN:
-1. Hanya ekstrak data yang EKSPLISIT disebutkan dalam teks
-2. Jangan mengarang atau menyimpulkan
-3. Jika tidak ada informasi, gunakan string kosong atau array kosong
-4. Untuk tanggal, gunakan tanggal hari ini jika disebutkan "hari ini" atau sejenisnya
+1. Baca SELURUH teks termasuk bagian "KONTEKS TAMBAHAN" jika ada
+2. Ekstrak nama file dan tanggal file dari konteks jika tersedia
+3. Hanya ekstrak data yang EKSPLISIT disebutkan dalam teks
+4. Jangan mengarang atau menyimpulkan
+5. Jika tidak ada informasi, gunakan string kosong atau array kosong
+6. Untuk personsInvolved, gunakan nama LENGKAP (bukan singkatan)
 
 TEKS INPUT:
 `;

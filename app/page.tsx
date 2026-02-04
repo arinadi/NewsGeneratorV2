@@ -148,7 +148,8 @@ function HomeContent() {
 
     try {
       const gemini = createGeminiService(apiKey);
-      const textToAnalyze = input.transcript || input.context;
+      // Combine transcript AND context for better metadata extraction
+      const textToAnalyze = [input.transcript, input.context].filter(Boolean).join('\n\n---\nKONTEKS TAMBAHAN:\n');
       const extracted = await gemini.extractMetadata(textToAnalyze);
 
       setInput((prev) => ({
