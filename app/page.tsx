@@ -7,8 +7,9 @@ import EditorPanel from '@/components/EditorPanel';
 import PreviewPanel from '@/components/PreviewPanel';
 import SettingsModal from '@/components/SettingsModal';
 import GlobalDropzone from '@/components/GlobalDropzone';
-import { ApiKeyProvider } from '@/contexts/ApiKeyContext';
+import { ApiKeyProvider, useApiKey } from '@/contexts/ApiKeyContext';
 import { DraftProvider } from '@/contexts/DraftContext';
+import { createGeminiService } from '@/services/GeminiService';
 
 // Constants
 export const ANGLES = ['straight', 'impact', 'accountability', 'human_interest'] as const;
@@ -19,10 +20,14 @@ export type Angle = typeof ANGLES[number];
 export type Style = typeof STYLES[number];
 export type Goal = typeof GOALS[number];
 
+export type MetadataSource = 'ai' | 'manual' | 'file';
+
 export interface Metadata {
   location: string;
   date: string;
   byline: string;
+  personsInvolved: string[];
+  source: MetadataSource;
 }
 
 export interface InputState {
@@ -64,8 +69,11 @@ export default function Home() {
       location: '',
       date: new Date().toISOString().split('T')[0],
       byline: '',
+      personsInvolved: [],
+      source: 'manual',
     },
   });
+  const [metadataError, setMetadataError] = useState<string | null>(null);
 
   const [settings, setSettings] = useState<Settings>({
     angle: 'straight',
@@ -102,45 +110,85 @@ export default function Home() {
     localStorage.setItem('kuli_tinta_history', JSON.stringify(updatedHistory));
   }, [history, settings, input.metadata]);
 
-  const handleGetMetadata = useCallback(() => {
+  const handleGetMetadata = useCallback(async (apiKey: string) => {
     if (!input.transcript && !input.context) return;
-    setIsExtractingMeta(true);
+    if (!apiKey) {
+      setMetadataError('API Key diperlukan. Silakan atur di Settings.');
+      return;
+    }
 
-    // Simulating AI extraction - will be replaced with real Gemini call in Phase 3
-    setTimeout(() => {
-      const mockMeta: Metadata = {
-        location: 'Jakarta Pusat',
-        date: new Date().toISOString().split('T')[0],
-        byline: 'Budi Santoso',
-      };
-      setInput((prev) => ({ ...prev, metadata: mockMeta }));
+    setIsExtractingMeta(true);
+    setMetadataError(null);
+
+    try {
+      const gemini = createGeminiService(apiKey);
+      const textToAnalyze = input.transcript || input.context;
+      const extracted = await gemini.extractMetadata(textToAnalyze);
+
+      setInput((prev) => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          location: extracted.location || prev.metadata.location,
+          date: extracted.date || prev.metadata.date,
+          personsInvolved: extracted.personsInvolved,
+          source: 'ai',
+        },
+      }));
+    } catch (error) {
+      console.error('Metadata extraction failed:', error);
+      setMetadataError('Gagal mengekstrak metadata. Silakan coba lagi.');
+    } finally {
       setIsExtractingMeta(false);
-    }, 1500);
+    }
   }, [input.transcript, input.context]);
 
-  const generateNews = useCallback((apiKey: string) => {
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  const generateNews = useCallback(async (apiKey: string) => {
     if (!apiKey) {
       setShowSettings(true);
       return;
     }
-    setIsGenerating(true);
+    if (!input.transcript) {
+      setGenerateError('Masukkan transkrip terlebih dahulu.');
+      return;
+    }
 
-    // Simulating Gemini 3 Pro Call - will be replaced with real API call in Phase 3
-    setTimeout(() => {
-      const mockResult: GeneratedResult = {
-        titles: [
-          'Langkah Strategis Pemerintah dalam Menangani Inflasi Global',
-          'Inflasi 2024: Mengapa Dompet Kita Terasa Lebih Tipis?',
-          'Dibalik Angka: Cerita Rakyat Menghadapi Kenaikan Harga',
-        ],
-        body: 'Jakarta - Pemerintah secara resmi mengumumkan serangkaian langkah strategis untuk memitigasi dampak inflasi global yang diperkirakan akan memuncak pada kuartal ketiga tahun ini. Dalam keterangannya hari ini, juru bicara menyampaikan bahwa koordinasi antar-lembaga menjadi kunci utama dalam menjaga daya beli masyarakat.\n\n"Kami tidak hanya melihat angka, kami melihat piring makan masyarakat," ujar salah satu narasumber dalam wawancara eksklusif tersebut. Kebijakan ini mencakup subsidi energi yang lebih tepat sasaran serta penguatan rantai pasok pangan lokal dari daerah produsen ke pasar-pasar induk di kota besar.',
-        hashtags: '#BeritaTerkini #EkonomiIndonesia #Inflasi2024 #KuliTintaAI',
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      const gemini = createGeminiService(apiKey);
+      const generated = await gemini.generateNews({
+        transcript: input.transcript,
+        context: input.context,
+        metadata: {
+          location: input.metadata.location,
+          date: input.metadata.date,
+          byline: input.metadata.byline,
+          personsInvolved: input.metadata.personsInvolved,
+        },
+        angle: settings.angle,
+        style: settings.style,
+        goal: settings.goal,
+      });
+
+      const newResult: GeneratedResult = {
+        titles: generated.titles,
+        body: generated.body,
+        hashtags: generated.hashtags,
       };
-      setResult(mockResult);
-      saveToHistory(mockResult);
+
+      setResult(newResult);
+      saveToHistory(newResult);
+    } catch (error) {
+      console.error('News generation failed:', error);
+      setGenerateError('Gagal generate berita. Periksa API key dan coba lagi.');
+    } finally {
       setIsGenerating(false);
-    }, 2000);
-  }, [saveToHistory]);
+    }
+  }, [input, settings, saveToHistory]);
 
   const loadFromHistory = useCallback((entry: HistoryEntry) => {
     setResult(entry.content);
@@ -153,37 +201,97 @@ export default function Home() {
     // TODO: Add toast notification
   }, []);
 
+  // Precision regeneration handlers
+  const handleRegenTitles = useCallback(async () => {
+    if (!result) return;
+    const apiKey = localStorage.getItem('kuli_tinta_api_key');
+    if (!apiKey) return;
+
+    const gemini = createGeminiService(apiKey);
+    const newTitles = await gemini.regenerateTitle(result.body);
+    setResult({ ...result, titles: newTitles });
+  }, [result]);
+
+  const handleRegenBody = useCallback(async () => {
+    if (!result) return;
+    const apiKey = localStorage.getItem('kuli_tinta_api_key');
+    if (!apiKey) return;
+
+    const gemini = createGeminiService(apiKey);
+    const newBody = await gemini.regenerateBody(result.titles[0], result.body);
+    setResult({ ...result, body: newBody });
+  }, [result]);
+
+  const handleRegenHashtags = useCallback(async () => {
+    if (!result) return;
+    const apiKey = localStorage.getItem('kuli_tinta_api_key');
+    if (!apiKey) return;
+
+    const gemini = createGeminiService(apiKey);
+    const article = `${result.titles[0]}\n\n${result.body}`;
+    const newHashtags = await gemini.generateHashtags(article);
+    setResult({ ...result, hashtags: newHashtags });
+  }, [result]);
+
   // Handle file dropped from global dropzone
   const handleFileDropped = useCallback(async (file: File) => {
     const extension = file.name.split('.').pop()?.toLowerCase();
-    
+
+    // Extract cleaned filename to add as context (may contain names, locations, dates)
+    const cleanedFilename = file.name
+      .replace(/\.[^/.]+$/, '')  // remove extension
+      .replace(/[-_]/g, ' ')     // replace separators with spaces
+      .trim();
+
+    // Extract file date metadata (last modified)
+    const fileDate = new Date(file.lastModified);
+    const fileDateStr = fileDate.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
     try {
+      let extractedText = '';
+
       if (extension === 'txt') {
-        const text = await file.text();
-        setInput((prev) => ({ ...prev, transcript: text }));
+        extractedText = await file.text();
       } else if (extension === 'pdf') {
         const pdfjsLib = await import('pdfjs-dist');
         pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-        
+
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        
+
         let fullText = '';
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: { str?: string }) => item.str || '')
+          const pageText = (textContent.items as Array<{ str?: string }>)
+            .map((item) => item.str || '')
             .join(' ');
           fullText += pageText + '\n\n';
         }
-        
-        setInput((prev) => ({ ...prev, transcript: fullText.trim() }));
+        extractedText = fullText.trim();
       } else if (extension === 'docx') {
         const mammoth = await import('mammoth');
         const arrayBuffer = await file.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer });
-        setInput((prev) => ({ ...prev, transcript: result.value }));
+        extractedText = result.value;
+      }
+
+      if (extractedText) {
+        // Build file context with name and date
+        const fileContext = `Nama file: ${cleanedFilename}\nTanggal file: ${fileDateStr}`;
+
+        setInput((prev) => ({
+          ...prev,
+          transcript: extractedText,
+          context: prev.context
+            ? `${prev.context}\n\n${fileContext}`
+            : fileContext,
+        }));
       }
     } catch (error) {
       console.error('Failed to process dropped file:', error);
@@ -215,6 +323,7 @@ export default function Home() {
                 setSettings={setSettings}
                 isExtractingMeta={isExtractingMeta}
                 isGenerating={isGenerating}
+                metadataError={metadataError}
                 onGetMetadata={handleGetMetadata}
                 onGenerate={generateNews}
               />
@@ -224,6 +333,9 @@ export default function Home() {
                 result={result}
                 metadata={input.metadata}
                 onCopy={copyToClipboard}
+                onRegenTitles={handleRegenTitles}
+                onRegenBody={handleRegenBody}
+                onRegenHashtags={handleRegenHashtags}
               />
             </main>
 

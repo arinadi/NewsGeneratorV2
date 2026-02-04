@@ -1,42 +1,49 @@
 # Phase 2: Multimodal Input & Smart Metadata
 
 > **Parent**: [Master Plan](./master-plan.md)
+> **Status**: ✅ COMPLETE
 > **Context**: [Agent Rules](./agent.md)
 
 ## Goals
 Enable journalists to upload any file and automatically extract factual metadata without server-side processing.
 
-## Tasks
+## Completed Tasks
 
-### File Parsing Engine
-- [ ] Create `FileUploadZone` component (Drag & Drop).
-- [ ] Implement `FileParserFactory` pattern.
-- [ ] **TXT Handler**: Implement strict stream/string reading.
-- [ ] **PDF Handler**:
-    - [ ] Install `pdfjs-dist`.
-    - [ ] Configure Web Worker for PDF parsing to avoid UI freeze.
-    - [ ] Extract text layer only (ignore images).
-- [ ] **DOCX Handler**:
-    - [ ] Install `mammoth`.
-    - [ ] Convert DOCX to raw text (preserve paragraph breaks).
+### ✅ File Parsing Engine
+- [x] Create `FileUploadZone` component (Drag & Drop)
+- [x] Create `GlobalDropzone` for full-page file drop support
+- [x] **TXT Handler**: Direct text reading
+- [x] **PDF Handler**:
+  - [x] Install `pdfjs-dist`
+  - [x] Configure CDN Worker for PDF parsing
+  - [x] Extract text layer from all pages
+- [x] **DOCX Handler**:
+  - [x] Install `mammoth`
+  - [x] Convert DOCX to raw text
 
-### The "Get Metadata" Feature
-- [ ] Create `MetadataService` for Gemini API interactions.
-- [ ] Implement `extractMetadata(text)` function.
-- [ ] Design Meta-extraction Prompt:
-  ```text
-  Context: Journalist helper.
-  Task: Extract strictly factual data.
-  Input: {TruncatedText}
-  Output JSON: {
-    "location": "City/Place or empty",
-    "date": "Date of event or empty",
-    "persons_involved": ["Name 1", "Name 2"]
+### ✅ The "Get Metadata" Feature
+- [x] Implement `GeminiService.extractMetadata(text)` function
+- [x] Meta-extraction Prompt with JSON output:
+  ```json
+  {
+    "location": "City/place name",
+    "date": "YYYY-MM-DD",
+    "personsInvolved": ["Name 1", "Name 2"]
   }
   ```
+- [x] Rate-limited API calls to avoid free tier limits
 
-### Metadata UI Components
-- [ ] Create `MetadataForm` (Location, Date, Byline inputs).
-- [ ] Bind "Auto-fill" button to `MetadataService`.
-- [ ] Add "Manual Override" capability (User edits AI suggestions).
-- [ ] Add "Source" badge (e.g., "Extracted from PDF" vs "Manual Input").
+### ✅ File Context Extraction (Improvement)
+- [x] Extract cleaned filename and add to context
+- [x] Extract file date (lastModified) in Indonesian locale
+- [x] Context format example:
+  ```
+  File name: Interview Joko Widodo Jakarta
+  File date: Wednesday, February 5, 2025
+  ```
+
+### ✅ Metadata UI Components
+- [x] Metadata fields in EditorPanel (Location, Date, Byline, Persons)
+- [x] "GET METADATA" button bound to GeminiService
+- [x] Manual override capability (user can edit AI suggestions)
+- [x] Source badge showing metadata origin ('ai', 'manual', 'file')

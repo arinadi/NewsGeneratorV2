@@ -1,15 +1,59 @@
 'use client';
 
-import { Newspaper, Copy, Download, Printer, RefreshCw, Save } from 'lucide-react';
+import { useState } from 'react';
+import { Newspaper, Copy, Download, Printer, RefreshCw, Save, Loader2 } from 'lucide-react';
 import { GeneratedResult, Metadata } from '@/app/page';
 
 interface PreviewPanelProps {
   result: GeneratedResult | null;
   metadata: Metadata;
   onCopy: (text: string) => void;
+  onRegenTitles?: () => Promise<void>;
+  onRegenBody?: () => Promise<void>;
+  onRegenHashtags?: () => Promise<void>;
 }
 
-export default function PreviewPanel({ result, metadata, onCopy }: PreviewPanelProps) {
+export default function PreviewPanel({
+  result,
+  metadata,
+  onCopy,
+  onRegenTitles,
+  onRegenBody,
+  onRegenHashtags,
+}: PreviewPanelProps) {
+  const [isRegenTitles, setIsRegenTitles] = useState(false);
+  const [isRegenBody, setIsRegenBody] = useState(false);
+  const [isRegenHashtags, setIsRegenHashtags] = useState(false);
+
+  const handleRegenTitles = async () => {
+    if (!onRegenTitles) return;
+    setIsRegenTitles(true);
+    try {
+      await onRegenTitles();
+    } finally {
+      setIsRegenTitles(false);
+    }
+  };
+
+  const handleRegenBody = async () => {
+    if (!onRegenBody) return;
+    setIsRegenBody(true);
+    try {
+      await onRegenBody();
+    } finally {
+      setIsRegenBody(false);
+    }
+  };
+
+  const handleRegenHashtags = async () => {
+    if (!onRegenHashtags) return;
+    setIsRegenHashtags(true);
+    try {
+      await onRegenHashtags();
+    } finally {
+      setIsRegenHashtags(false);
+    }
+  };
   if (!result) {
     return (
       <section className="lg:col-span-5 relative">
@@ -104,26 +148,32 @@ export default function PreviewPanel({ result, metadata, onCopy }: PreviewPanelP
             <span className="text-[10px] font-bold bg-slate-900 text-white px-2 py-0.5">
               HEADLINE CHOICES
             </span>
-            <button className="text-[10px] font-bold text-blue-600 flex items-center gap-1 group-hover:opacity-100 opacity-0 transition-opacity print:hidden">
-              <RefreshCw className="w-3 h-3" />
-              REGEN TITLES
+            <button
+              onClick={handleRegenTitles}
+              disabled={isRegenTitles}
+              className="text-[10px] font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors print:hidden disabled:opacity-50"
+            >
+              {isRegenTitles ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3 h-3" />
+              )}
+              {isRegenTitles ? 'GENERATING...' : 'REGEN TITLES'}
             </button>
           </div>
           {result.titles.map((t, idx) => (
             <div
               key={idx}
-              className={`relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${
-                idx === 0
+              className={`relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${idx === 0
                   ? 'before:bg-red-600'
                   : 'before:bg-stone-200 opacity-60'
-              }`}
+                }`}
             >
               <h2
-                className={`font-headline leading-tight mb-1 ${
-                  idx === 0
+                className={`font-headline leading-tight mb-1 ${idx === 0
                     ? 'text-3xl font-bold text-slate-900'
                     : 'text-xl font-semibold text-slate-600'
-                }`}
+                  }`}
               >
                 {t}
               </h2>
@@ -148,9 +198,17 @@ export default function PreviewPanel({ result, metadata, onCopy }: PreviewPanelP
 
         {/* Body */}
         <div className="relative group/body">
-          <button className="absolute -right-4 -top-6 text-[10px] font-bold text-blue-600 flex items-center gap-1 opacity-0 group-hover/body:opacity-100 transition-opacity print:hidden">
-            <RefreshCw className="w-3 h-3" />
-            REGEN BODY
+          <button
+            onClick={handleRegenBody}
+            disabled={isRegenBody}
+            className="absolute -right-4 -top-6 text-[10px] font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors print:hidden disabled:opacity-50"
+          >
+            {isRegenBody ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3 h-3" />
+            )}
+            {isRegenBody ? 'REWRITING...' : 'REGEN BODY'}
           </button>
           <div className="prose prose-stone max-w-none">
             <p className="text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap drop-cap">
@@ -161,9 +219,17 @@ export default function PreviewPanel({ result, metadata, onCopy }: PreviewPanelP
 
         {/* Hashtags */}
         <div className="mt-12 pt-6 border-t border-stone-200 flex flex-wrap gap-2 group/hash print:hidden">
-          <button className="w-full mb-2 text-[10px] font-bold text-blue-600 flex items-center gap-1 opacity-0 group-hover/hash:opacity-100 transition-opacity">
-            <RefreshCw className="w-3 h-3" />
-            REGEN HASHTAGS
+          <button
+            onClick={handleRegenHashtags}
+            disabled={isRegenHashtags}
+            className="w-full mb-2 text-[10px] font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors disabled:opacity-50"
+          >
+            {isRegenHashtags ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3 h-3" />
+            )}
+            {isRegenHashtags ? 'GENERATING...' : 'REGEN HASHTAGS'}
           </button>
           {result.hashtags.split(' ').map((tag) => (
             <span
