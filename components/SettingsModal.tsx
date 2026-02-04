@@ -1,0 +1,70 @@
+'use client';
+
+import { Settings2 } from 'lucide-react';
+import { useApiKey } from '@/contexts/ApiKeyContext';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const { apiKey, setApiKey } = useApiKey();
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="bg-white rounded-3xl w-full max-w-md p-8 relative shadow-2xl space-y-6 z-10">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold flex items-center gap-2 italic tracking-tighter uppercase font-headline">
+            <Settings2 className="w-6 h-6" />
+            Konfigurasi
+          </h2>
+          <p className="text-sm text-stone-500">
+            Masukkan Gemini API Key Anda. Data disimpan secara lokal di browser Anda.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
+              Gemini API Key
+            </label>
+            <input
+              type="password"
+              placeholder="Paste your API key here..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+            />
+          </div>
+
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <p className="text-[10px] font-bold text-amber-700 uppercase mb-1">
+              Keamanan Data
+            </p>
+            <p className="text-[11px] text-amber-800 opacity-80 leading-relaxed">
+              Key ini hanya tersimpan di Local Storage perangkat Anda dan tidak pernah dikirim
+              ke server pihak ketiga selain Google.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all"
+        >
+          SIMPAN & TUTUP
+        </button>
+      </div>
+    </div>
+  );
+}
