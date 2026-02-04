@@ -10,7 +10,7 @@ Establish a secure, static environment that handles API keys and project history
 ## Technical Specifications
 - **Framework**: Next.js 16.1.6 (App Router), `output: 'export'`
 - **Styling**: Tailwind CSS (Stone/Slate/Paper palette + Glassmorphism)
-- **Storage**: `localStorage` for API Key
+- **Storage**: `localStorage` for API Key, `IndexedDB` for drafts
 - **Fonts**: Inter (body), system serif (headlines)
 
 ## Completed Tasks
@@ -35,12 +35,23 @@ Establish a secure, static environment that handles API keys and project history
 - [x] Implement "Test Connection" with real Gemini API call
 - [x] Connection status indicator in Header (green/red badge)
 
-### ✅ History Sidebar
-- [x] In-memory history state (simplified from IndexedDB)
-- [x] Sidebar component to list saved drafts
-- [x] Mobile-responsive collapsible design
-- [x] Load draft on click functionality
+### ✅ IndexedDB Integration (The History Sidebar)
+- [x] Install `idb` library
+- [x] Define IDB Schema in `DraftContext.tsx`
+- [x] Implement CRUD operations (save, load, list, delete)
+- [x] Create Sidebar Component to list saved drafts
+- [x] History persisted across browser sessions
 
-### ⏭️ Deferred
-- [ ] URL State Synchronization (deferred - not critical for MVP)
-- [ ] IndexedDB for persistent history (using in-memory for now)
+### ✅ URL State Synchronization
+- [x] Sync settings (angle, style, goal) to URL query parameters
+- [x] Read initial settings from URL on page load
+- [x] Use Suspense boundary for searchParams hydration
+- [x] Non-default settings only added to URL (clean URLs)
+
+## Files Created
+
+| File | Description |
+|------|-------------|
+| `contexts/DraftContext.tsx` | IndexedDB CRUD for drafts |
+| `services/DraftService.ts` | Alternative draft service |
+| `hooks/useUrlState.ts` | URL state sync hook |

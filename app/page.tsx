@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Header from '@/components/Header';
 import HistorySidebar from '@/components/HistorySidebar';
 import EditorPanel from '@/components/EditorPanel';
@@ -58,6 +59,18 @@ export interface HistoryEntry {
 }
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [showSettings, setShowSettings] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExtractingMeta, setIsExtractingMeta] = useState(false);
@@ -75,11 +88,24 @@ export default function Home() {
   });
   const [metadataError, setMetadataError] = useState<string | null>(null);
 
-  const [settings, setSettings] = useState<Settings>({
-    angle: 'straight',
-    style: 'professional',
-    goal: 'google_news',
-  });
+  // Initialize settings from URL params or defaults
+  const [settings, setSettings] = useState<Settings>(() => ({
+    angle: (searchParams.get('angle') as Angle) || 'straight',
+    style: (searchParams.get('style') as Style) || 'professional',
+    goal: (searchParams.get('goal') as Goal) || 'google_news',
+  }));
+
+  // Sync settings changes to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (settings.angle !== 'straight') params.set('angle', settings.angle);
+    if (settings.style !== 'professional') params.set('style', settings.style);
+    if (settings.goal !== 'google_news') params.set('goal', settings.goal);
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    router.replace(newUrl, { scroll: false });
+  }, [settings, router, pathname]);
 
   const [result, setResult] = useState<GeneratedResult | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
