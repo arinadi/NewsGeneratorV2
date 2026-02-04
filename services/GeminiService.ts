@@ -282,15 +282,20 @@ export class GeminiService {
 
                     return response.text || '';
                 } catch (error: unknown) {
-                    const err = error as Error & { status?: number };
-                    console.warn(`[GeminiService] Model ${modelId} failed:`, err.message);
+                    const err = error as Error & { status?: number; message?: string };
 
-                    // If it's not a model-related error (e.g., rate limit), throw immediately
-                    if (err.status === 429) {
-                        throw error;
+                    // Check if quota exceeded for THIS model - try next model
+                    const isQuotaExceeded = err.status === 429 ||
+                        err.message?.includes('quota') ||
+                        err.message?.includes('RESOURCE_EXHAUSTED');
+
+                    if (isQuotaExceeded) {
+                        console.warn(`[GeminiService] Model ${modelId} quota exceeded, trying next...`);
+                        continue;
                     }
 
-                    // Continue to next model
+                    // For other errors, also try next model
+                    console.warn(`[GeminiService] Model ${modelId} failed:`, err.message);
                     continue;
                 }
             }
