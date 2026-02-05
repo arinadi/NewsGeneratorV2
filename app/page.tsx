@@ -159,9 +159,25 @@ function HomeContent() {
         titles: generated.titles,
         body: generated.body,
         hashtags: generated.hashtags,
+        // We don't store location/date in result, but update input.metadata below
       };
 
       setResult(newResult);
+
+      // Auto-fill extracted metadata if available
+      if (generated.location || generated.date) {
+        setInput(prev => ({
+          ...prev,
+          metadata: {
+            ...prev.metadata,
+            location: generated.location || prev.metadata.location,
+            date: generated.date || prev.metadata.date,
+          }
+        }));
+        // Optional: Notify user
+        // toast.success('Lokasi dan Tanggal diperbarui dari hasil AI');
+      }
+
       // Removed saveToHistory call
     } catch (error) {
       console.error('News generation failed:', error);

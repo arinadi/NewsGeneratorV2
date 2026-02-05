@@ -28,6 +28,8 @@ export interface GeneratedNews {
     titles: string[];
     body: string;
     hashtags: string;
+    location?: string;
+    date?: string;
 }
 
 // Prompts
@@ -135,7 +137,9 @@ function buildTitleHashtagPrompt(body: string, goal: string): string {
 
     return `${KULI_TINTA_SYSTEM}
 
-TUGAS: Buat 3 JUDUL dan HASHTAG untuk artikel berikut.
+TUGAS:
+1. Buat 3 JUDUL dan HASHTAG untuk artikel berikut.
+2. Ekstrak LOKASI dan TANGGAL kejadian dari isi artikel (jika ada).
 
 GOAL: ${goalHint[goal] || goalHint.google_news}
 
@@ -149,40 +153,42 @@ FORMAT OUTPUT (JSON only, tanpa markdown code block):
     "Judul alternatif 1",
     "Judul alternatif 2"
   ],
-  "hashtags": "#Tag1 #Tag2 #Tag3 #Tag4 #Tag5"
+  "hashtags": "#Tag1 #Tag2 #Tag3 #Tag4 #Tag5",
+  "location": "Nama Kota/Tempat (atau null jika tidak disebut)",
+  "date": "YYYY-MM-DD (atau null jika tidak disebut/dapat disimpulkan)"
 }
 `;
 }
 
 const TITLE_REGEN_PROMPT = `${KULI_TINTA_SYSTEM}
 
-TUGAS: Buat 3 judul alternatif baru untuk artikel berikut. Judul harus:
-- Informatif dan menarik
-- Mengandung kata kunci utama
-- Maksimal 70 karakter
-- Berbeda angle satu sama lain
+    TUGAS: Buat 3 judul alternatif baru untuk artikel berikut.Judul harus:
+    - Informatif dan menarik
+        - Mengandung kata kunci utama
+            - Maksimal 70 karakter
+                - Berbeda angle satu sama lain
 
-ARTIKEL:
-`;
+    ARTIKEL:
+    `;
 
 const BODY_REGEN_PROMPT = `${KULI_TINTA_SYSTEM}
 
-TUGAS: Tulis ulang isi berita berikut dengan struktur dan narasi yang lebih baik.
+    TUGAS: Tulis ulang isi berita berikut dengan struktur dan narasi yang lebih baik.
 Pertahankan semua fakta dan kutipan, tapi perbaiki:
-- Struktur piramida terbalik
-- Alur cerita
-- Transisi antar paragraf
+    - Struktur piramida terbalik
+        - Alur cerita
+            - Transisi antar paragraf
 
 JUDUL YANG DIPERTAHANKAN:
-`;
+    `;
 
-const HASHTAG_PROMPT = `Buat 5-7 hashtag SEO-friendly dalam Bahasa Indonesia untuk artikel berikut.
-Hashtag harus relevan, trending-friendly, dan tidak terlalu generik.
+const HASHTAG_PROMPT = `Buat 5 - 7 hashtag SEO - friendly dalam Bahasa Indonesia untuk artikel berikut.
+Hashtag harus relevan, trending - friendly, dan tidak terlalu generik.
 
 FORMAT OUTPUT: #Tag1 #Tag2 #Tag3 #Tag4 #Tag5
 
-ARTIKEL:
-`;
+    ARTIKEL:
+    `;
 
 /**
  * Extract potential name from filename (basic cleaning only)
@@ -270,7 +276,7 @@ export class GeminiService {
 
             for (const modelId of modelsToTry) {
                 try {
-                    console.log(`[GeminiService] Trying model: ${modelId}`);
+                    console.log(`[GeminiService] Trying model: ${modelId} `);
                     const response = await this.ai.models.generateContent({
                         model: modelId,
                         contents,
@@ -297,7 +303,7 @@ export class GeminiService {
                     }
 
                     // For other errors, also try next model
-                    console.warn(`[GeminiService] Model ${modelId} failed:`, err.message);
+                    console.warn(`[GeminiService] Model ${modelId} failed: `, err.message);
                     continue;
                 }
             }
@@ -335,13 +341,13 @@ export class GeminiService {
      */
     async validatePersonName(potentialName: string): Promise<string | null> {
         try {
-            const prompt = `Apakah "${potentialName}" adalah nama orang yang valid (bukan nama tempat, organisasi, atau kata acak)?
+            const prompt = `Apakah "${potentialName}" adalah nama orang yang valid(bukan nama tempat, organisasi, atau kata acak) ?
 
-Jawab dalam format JSON:
-{
-  "isValidName": true/false,
-  "correctedName": "Nama yang benar jika valid, atau null"
-}
+        Jawab dalam format JSON:
+    {
+        "isValidName": true / false,
+            "correctedName": "Nama yang benar jika valid, atau null"
+    }
 
 Contoh nama valid: "Joko Widodo", "Budi Santoso", "Sri Mulyani"
 Contoh bukan nama: "Data Penting", "Rekaman Audio", "Jakarta Pusat"`;
@@ -393,6 +399,8 @@ Contoh bukan nama: "Data Penting", "Rekaman Audio", "Jakarta Pusat"`;
             titles: Array.isArray(parsed.titles) ? parsed.titles : ['Judul Berita'],
             body,
             hashtags: parsed.hashtags || '#Berita',
+            location: parsed.location || undefined,
+            date: parsed.date || undefined,
         };
     }
 
@@ -445,7 +453,7 @@ Contoh bukan nama: "Data Penting", "Rekaman Audio", "Jakarta Pusat"`;
 
         for (const modelId of modelsToTry) {
             try {
-                console.log(`[GeminiService] Testing connection with: ${modelId}`);
+                console.log(`[GeminiService] Testing connection with: ${modelId} `);
                 const response = await this.ai.models.generateContent({
                     model: modelId,
                     contents: 'OK',
@@ -454,7 +462,7 @@ Contoh bukan nama: "Data Penting", "Rekaman Audio", "Jakarta Pusat"`;
                 if (response.text) {
                     // Save working model
                     if (modelId !== this.model) {
-                        console.log(`[GeminiService] Found working model: ${modelId}`);
+                        console.log(`[GeminiService] Found working model: ${modelId} `);
                         this.setModel(modelId);
                     }
                     return { success: true, model: modelId };

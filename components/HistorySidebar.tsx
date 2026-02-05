@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FileText, ChevronDown, ChevronUp, Trash2, Calendar, MapPin } from 'lucide-react';
 import { Draft } from '@/contexts/DraftContext';
+import ProTips from './ProTips';
 
 interface HistorySidebarProps {
   drafts: Draft[];
@@ -176,14 +177,7 @@ export default function HistorySidebar({ drafts, onSelectDraft, onDeleteDraft }:
         </div>
 
         {/* Pro Tip Card */}
-        <div className="p-5 bg-slate-900 rounded-2xl text-white space-y-3 shadow-xl shrink-0">
-          <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Pro Tip
-          </h4>
-          <p className="text-sm leading-relaxed opacity-90">
-            Gunakan tombol <b>Reset / Clear</b> di header untuk memulai lembar kerja baru yang bersih.
-          </p>
-        </div>
+        <ProTips />
       </aside>
     </>
   );
