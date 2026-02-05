@@ -338,7 +338,7 @@ function HomeContent() {
         extractedText = await file.text();
       } else if (extension === 'pdf') {
         const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/workers/pdf.worker.min.js';
 
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

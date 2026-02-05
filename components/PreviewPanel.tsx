@@ -170,7 +170,7 @@ export default function PreviewPanel({
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
-            backgroundImage: "url('https://www.transparenttextures.com/patterns/paper-fibers.png')",
+            backgroundImage: "url('/textures/paper-fibers.png')",
           }}
         />
 
