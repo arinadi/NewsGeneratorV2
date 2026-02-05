@@ -177,9 +177,9 @@ export default function PreviewPanel({
         {/* Header Koran */}
         <div className="border-b-4 border-slate-900 pb-4 mb-8 flex justify-between items-end print:border-b-2">
           <div className="flex-1">
-            <h4 className="font-headline text-3xl font-black italic tracking-tighter">
+            <h2 className="font-headline text-3xl font-black italic tracking-tighter">
               REDAKSI AI
-            </h4>
+            </h2>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
               {metadata.location} • {metadata.date}
             </p>
@@ -233,9 +233,9 @@ export default function PreviewPanel({
         {/* Judul Opsi */}
         <div className="space-y-6 mb-10 group">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold bg-slate-900 text-white px-2 py-0.5">
+            <h3 className="text-[10px] font-bold bg-slate-900 text-white px-2 py-0.5" id="headline-choices-label">
               HEADLINE CHOICES
-            </span>
+            </h3>
             <div className="flex items-center gap-2 print:hidden">
               <button
                 onClick={handleCopyTitles}
@@ -279,6 +279,7 @@ export default function PreviewPanel({
               {isEditing ? (
                 <input
                   type="text"
+                  aria-labelledby="headline-choices-label"
                   value={t}
                   onChange={(e) => {
                     if (onUpdateResult) {
@@ -293,7 +294,7 @@ export default function PreviewPanel({
                     }`}
                 />
               ) : (
-                <h2
+                <h3
                   onDoubleClick={() => setIsEditing(true)}
                   className={`font-headline leading-tight mb-1 cursor-text ${idx === 0
                     ? 'text-3xl font-bold text-slate-900'
@@ -302,7 +303,7 @@ export default function PreviewPanel({
                   title="Double click to edit"
                 >
                   {t}
-                </h2>
+                </h3>
               )}
             </div>
           ))}

@@ -45,17 +45,21 @@ export default function EditorPanel({
         {/* Transcript Input */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
           <div className="px-4 py-2 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1">
+            <h2 className="text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-1">
               <FileText className="w-3 h-3" />
               Transkrip / Raw Text
-            </span>
+            </h2>
             {input.transcript && (
-              <span className="text-[10px] text-stone-400">
+              <span className="text-[10px] text-stone-500">
                 {input.transcript.length.toLocaleString()} karakter
               </span>
             )}
           </div>
+          <label htmlFor="transcript-input" className="sr-only">
+            Transkrip
+          </label>
           <textarea
+            id="transcript-input"
             className="w-full p-4 h-48 text-sm focus:outline-none resize-none bg-transparent"
             placeholder="Paste hasil transkrip Whisper atau catatan wawancara di sini..."
             value={input.transcript}
@@ -66,12 +70,16 @@ export default function EditorPanel({
         {/* Context Input */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
           <div className="px-4 py-2 bg-stone-50 border-b border-stone-100">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1">
+            <h2 className="text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-1">
               <Settings2 className="w-3 h-3" />
               Konteks Tambahan
-            </span>
+            </h2>
           </div>
+          <label htmlFor="context-input" className="sr-only">
+            Konteks Tambahan
+          </label>
           <textarea
+            id="context-input"
             className="w-full p-4 h-24 text-sm focus:outline-none resize-none bg-transparent"
             placeholder="Paste undangan WA, siaran pers, atau info tambahan..."
             value={input.context}
@@ -86,15 +94,19 @@ export default function EditorPanel({
         {/* Controls */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-stone-500 uppercase ml-1">
+            <label
+              htmlFor="angle-select"
+              className="text-[10px] font-bold text-stone-600 uppercase ml-1"
+            >
               Angle
             </label>
             <select
+              id="angle-select"
               value={settings.angle}
               onChange={(e) =>
                 setSettings({ ...settings, angle: e.target.value as typeof settings.angle })
               }
-              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-500/10 capitalize"
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-500/10 capitalize cursor-pointer"
             >
               {ANGLES.map((a) => (
                 <option key={a} value={a}>
@@ -104,15 +116,19 @@ export default function EditorPanel({
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-stone-500 uppercase ml-1">
+            <label
+              htmlFor="style-select"
+              className="text-[10px] font-bold text-stone-600 uppercase ml-1"
+            >
               Style
             </label>
             <select
+              id="style-select"
               value={settings.style}
               onChange={(e) =>
                 setSettings({ ...settings, style: e.target.value as typeof settings.style })
               }
-              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-500/10 capitalize"
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-500/10 capitalize cursor-pointer"
             >
               {STYLES.map((s) => (
                 <option key={s} value={s}>
@@ -125,15 +141,19 @@ export default function EditorPanel({
 
         {/* Goal Selector */}
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-stone-500 uppercase ml-1">
+          <label
+            htmlFor="goal-select"
+            className="text-[10px] font-bold text-stone-600 uppercase ml-1"
+          >
             Goal
           </label>
           <select
+            id="goal-select"
             value={settings.goal}
             onChange={(e) =>
               setSettings({ ...settings, goal: e.target.value as typeof settings.goal })
             }
-            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-500/10 capitalize"
+            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-500/10 capitalize cursor-pointer"
           >
             {GOALS.map((g) => (
               <option key={g} value={g}>
