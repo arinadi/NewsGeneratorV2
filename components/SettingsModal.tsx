@@ -55,9 +55,19 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="space-y-4">
           {/* API Key Input */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
-              Gemini API Key
-            </label>
+            <div className="flex justify-between items-center bg-stone-100/50 mb-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
+                Gemini API Key
+              </label>
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-blue-500 font-medium hover:underline flex items-center gap-1"
+              >
+                Dapatkan Key &rarr;
+              </a>
+            </div>
             <input
               type="password"
               placeholder="Paste your API key here..."

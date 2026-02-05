@@ -2,27 +2,47 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farinadi%2FNewsGeneratorV2)
 
-> Professional News Generator PWA for Indonesian Journalists, powered by Gemini 3 Pro.
+> **Professional News Generator PWA for Indonesian Journalists.**
+> Powered by Google Gemini 3 Pro (Preview) with resilient multi-model fallback.
 
 ![Kuli Tinta AI](public/icons/icon-512.png)
 
-## ✨ Features
+## ✨ Core Features
 
-- 🔐 **BYOK (Bring Your Own Key)** - API Key stored locally in browser
-- 📄 **Multi-format Input** - Supports PDF, DOCX, TXT file uploads
-- 🤖 **AI-Powered Generation** - 2-step prompt strategy for quality content
-- 🎯 **Precision Regeneration** - Regenerate title, body, or hashtags independently
-- 📰 **Newspaper-style Preview** - Professional editorial layout
-- 📱 **PWA Support** - Installable on mobile and desktop
-- 🔄 **Offline Capable** - Service worker caching
-- 📥 **Export Options** - Copy, Download TXT, Print
-- ⚡ **Rate Limiter** - Built-in protection for free tier users
+### 🤖 Resilient AI Engine
+- **Multi-Model Intelligence**: Automatically switches between **Gemini 3 Pro**, **Gemini 3 Flash**, and **Gemini 2.5 Flash** to handle rate limits (429 errors) and quotas.
+- **2-Step Generation Strategy**: Generates article body first for context, then follows up with precision titles and hashtags.
+- **Context-Aware Extraction**: Automatically identifies **Location**, **Date**, and **Persons Involved** from transcripts and uploaded files.
+
+### 📝 Smart Editor & Drafts
+- **Auto-Save & Restore**: 'Smart Drafts' automatically save your progress. Restore full state instantly—including input files, context, and settings.
+- **Interactive Editing**: Double-click any generated title or paragraph to edit inline.
+- **Workspace Management**: Easily clear your workspace or manage saved drafts from the sidebar.
+
+### 🚀 Production Ready
+- **Interactive Tour**: Built-in onboarding guide using `driver.js` for new users.
+- **PWA Support**: Installable on mobile/desktop with offline service worker caching.
+- **BYOK (Bring Your Own Key)**: API Key stored securely in your browser's local storage.
+- **Multi-format Input**: Drag-and-drop support for PDF, DOCX, and TXT files.
+- **Rate Limiter**: Built-in queue system to manage free tier API usage (10 RPM).
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 15+ (App Router, Static Export)
+- **AI**: Google GenAI SDK (Gemini 3 Pro / Flash)
+- **State & Storage**: React Context + IndexedDB (`idb`)
+- **Styling**: Tailwind CSS 4
+- **UI Components**: Lucide React, Sonner (Toast)
+- **UX/Onboarding**: Driver.js
+- **File Processing**: pdfjs-dist, mammoth
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - Gemini API Key ([Get one here](https://aistudio.google.com/apikey))
+
+  [![Get Gemini API Key](https://img.shields.io/badge/Get%20Gemini%20API%20Key-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://aistudio.google.com/apikey)
 
 ### Installation
 
@@ -40,70 +60,37 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 🔧 Configuration
+
+### API Key & Models
+1. Click the **⚙️ Settings** icon.
+2. Enter your **Gemini API Key**.
+3. **Model Selection**: The app defaults to *Gemini 3 Pro*. You can manually select a model or let the auto-fallback system handle it.
+4. Click "Test Connection" to verify.
+
 ### Build for Production
 
 ```bash
 npm run build
 ```
-
-Output is in the `out/` folder. Deploy to any static hosting.
-
-## 🌐 Deploy to Vercel
-
-The easiest way to deploy is using Vercel:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farinadi%2FNewsGeneratorV2)
-
-Or manually:
-
-```bash
-npm i -g vercel
-vercel
-```
-
-## 🔧 Configuration
-
-### API Key Setup
-1. Open the app
-2. Click the ⚙️ Settings icon
-3. Enter your Gemini API Key
-4. Click "Test Connection" to verify
-
-### Supported File Types
-| Format | Library |
-|--------|---------|
-| PDF | pdfjs-dist |
-| DOCX | mammoth |
-| TXT | Native |
-
-## 🏗️ Tech Stack
-
-- **Framework**: Next.js 16 (App Router, Static Export)
-- **AI**: Google Gemini 3 Pro
-- **Styling**: Tailwind CSS 4
-- **Icons**: Lucide React
-- **PWA**: Custom Service Worker
+Output is in the `out/` folder. Ready for Vercel, Netlify, or any static host.
 
 ## 📁 Project Structure
 
 ```
-├── app/                  # Next.js App Router
-│   ├── layout.tsx       # Root layout with PWA meta
-│   ├── page.tsx         # Main application
-│   └── globals.css      # Tailwind styles
-├── components/          # React components
-│   ├── EditorPanel.tsx  # Input & metadata form
-│   ├── PreviewPanel.tsx # Article preview & export
-│   ├── Header.tsx       # Navigation & settings
+├── app/                  # Next.js App Router & Layouts
+├── components/          
+│   ├── EditorPanel.tsx   # Input form & file handling
+│   ├── PreviewPanel.tsx  # Article display & inline editing
+│   ├── HistorySidebar.tsx # Saved Drafts management
+│   ├── TourGuide.tsx     # Onboarding tour logic
 │   └── ...
-├── services/            # Business logic
-│   ├── GeminiService.ts # AI integration
-│   └── RateLimiter.ts   # Request queue
-├── public/              # Static assets
-│   ├── manifest.json    # PWA manifest
-│   ├── sw.js           # Service worker
-│   └── icons/          # PWA icons
-└── vibes-coding/        # Planning docs
+├── services/            
+│   ├── GeminiService.ts  # AI integration & Fallback logic
+│   ├── DraftService.ts   # IndexedDB Draft management
+│   └── RateLimiter.ts    # Request queueing
+├── public/               # Manifest, Icons, SW
+└── vibes-coding/         # Implementation plans & docs
 ```
 
 ## 📜 License
@@ -114,5 +101,4 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 - [Google Gemini](https://deepmind.google/technologies/gemini/) - AI Model
 - [Next.js](https://nextjs.org/) - React Framework
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
-- [Lucide](https://lucide.dev/) - Icons
+- [Vercel](https://vercel.com) - Deployment
