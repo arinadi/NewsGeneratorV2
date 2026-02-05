@@ -5,23 +5,31 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface ApiKeyContextType {
   apiKey: string;
   setApiKey: (key: string) => void;
+  modelId: string;
+  setModelId: (id: string) => void;
   isConnected: boolean;
 }
 
 const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
 const API_KEY_STORAGE_KEY = 'kuli_tinta_api_key';
+const MODEL_STORAGE_KEY = 'kuli_tinta_model';
 
 export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [apiKey, setApiKeyState] = useState<string>('');
+  const [modelId, setModelIdState] = useState<string>('gemini-3-pro-preview');
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
-  // Load API key from localStorage on mount
+  // Load from localStorage on mount
   useEffect(() => {
     const savedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
     if (savedKey) {
       setApiKeyState(savedKey);
       setIsConnected(true);
+    }
+    const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    if (savedModel) {
+      setModelIdState(savedModel);
     }
   }, []);
 
@@ -36,8 +44,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setModelId = (id: string) => {
+    setModelIdState(id);
+    localStorage.setItem(MODEL_STORAGE_KEY, id);
+  };
+
   return (
-    <ApiKeyContext.Provider value={{ apiKey, setApiKey, isConnected }}>
+    <ApiKeyContext.Provider value={{ apiKey, setApiKey, modelId, setModelId, isConnected }}>
       {children}
     </ApiKeyContext.Provider>
   );

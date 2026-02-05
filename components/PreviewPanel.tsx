@@ -33,6 +33,16 @@ export default function PreviewPanel({
   const [copyState, setCopyState] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastTap = useRef<number>(0);
+
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
+      setIsEditing(true);
+    }
+    lastTap.current = now;
+  };
 
   // Handle click outside to close editor (save)
   useEffect(() => {
@@ -165,7 +175,7 @@ export default function PreviewPanel({
 
   return (
     <section id="tour-preview-panel" className="lg:col-span-5 relative" ref={containerRef}>
-      <div className="bg-paper-light border border-stone-300 shadow-2xl rounded-sm p-8 sm:p-12 min-h-screen relative overflow-hidden print:shadow-none print:border-none">
+      <div className="bg-paper-light border border-stone-300 shadow-2xl rounded-sm p-5 sm:p-12 min-h-screen relative overflow-hidden print:shadow-none print:border-none">
         {/* Newspaper Texture Overlay */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -175,9 +185,9 @@ export default function PreviewPanel({
         />
 
         {/* Header Koran */}
-        <div className="border-b-4 border-slate-900 pb-4 mb-8 flex justify-between items-end print:border-b-2">
+        <div className="border-b-4 border-slate-900 pb-3 sm:pb-4 mb-6 sm:mb-8 flex justify-between items-end print:border-b-2">
           <div className="flex-1">
-            <h2 className="font-headline text-3xl font-black italic tracking-tighter">
+            <h2 className="font-headline text-2xl sm:text-3xl font-black italic tracking-tighter">
               REDAKSI AI
             </h2>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
@@ -289,18 +299,19 @@ export default function PreviewPanel({
                     }
                   }}
                   className={`w-full bg-transparent border-b border-stone-300 focus:border-blue-500 outline-none font-headline leading-tight mb-1 ${idx === 0
-                    ? 'text-3xl font-bold text-slate-900'
-                    : 'text-xl font-semibold text-slate-600'
+                    ? 'text-2xl sm:text-3xl font-bold text-slate-900'
+                    : 'text-lg sm:text-xl font-semibold text-slate-600'
                     }`}
                 />
               ) : (
                 <h3
                   onDoubleClick={() => setIsEditing(true)}
+                  onTouchEnd={handleDoubleTap}
                   className={`font-headline leading-tight mb-1 cursor-text ${idx === 0
-                    ? 'text-3xl font-bold text-slate-900'
-                    : 'text-xl font-semibold text-slate-600'
+                    ? 'text-2xl sm:text-3xl font-bold text-slate-900'
+                    : 'text-lg sm:text-xl font-semibold text-slate-600'
                     }`}
-                  title="Double click to edit"
+                  title="Double click (or double tap) to edit"
                 >
                   {t}
                 </h3>
@@ -310,7 +321,7 @@ export default function PreviewPanel({
         </div>
 
         {/* Byline */}
-        <div className="flex items-center gap-3 mb-8 py-3 border-y border-stone-200">
+        <div className="flex items-center gap-3 mb-6 sm:mb-8 py-3 border-y border-stone-200">
           <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center font-bold text-stone-500 text-xs">
             {metadata.byline ? metadata.byline[0].toUpperCase() : 'K'}
           </div>
@@ -366,13 +377,14 @@ export default function PreviewPanel({
                     onUpdateResult({ ...result, body: e.target.value });
                   }
                 }}
-                className="w-full h-[600px] p-4 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap resize-y"
+                className="w-full h-[600px] p-4 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base sm:text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap resize-y"
               />
             ) : (
               <p
                 onDoubleClick={() => setIsEditing(true)}
-                className="text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap drop-cap cursor-text"
-                title="Double click to edit"
+                onTouchEnd={handleDoubleTap}
+                className="text-base sm:text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap drop-cap cursor-text"
+                title="Double click (or double tap) to edit"
               >
                 {result.body}
               </p>

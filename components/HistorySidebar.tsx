@@ -33,7 +33,7 @@ export default function HistorySidebar({ drafts, onSelectDraft, onDeleteDraft }:
       <div className="lg:hidden col-span-1">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full glass rounded-2xl border border-stone-200 p-4 flex items-center justify-between"
+          className="w-full glass rounded-2xl border border-stone-200 p-3 sm:p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-slate-600" />
@@ -59,7 +59,7 @@ export default function HistorySidebar({ drafts, onSelectDraft, onDeleteDraft }:
                 drafts.map((draft) => (
                   <div
                     key={draft.id}
-                    className="w-full text-left p-4 hover:bg-white transition-colors flex justify-between items-start group"
+                    className="w-full text-left p-3 sm:p-4 hover:bg-white transition-colors flex justify-between items-start group"
                   >
                     <button
                       onClick={() => {

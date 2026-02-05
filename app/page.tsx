@@ -432,11 +432,10 @@ function HomeContent() {
         <Header
           showSettings={showSettings}
           setShowSettings={setShowSettings}
-          onReset={handleReset}
           onStartTour={() => setStartTour(true)}
         />
 
-        <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <main className="max-w-[1600px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8">
           {/* Sidebar - History (3 Cols) */}
           <HistorySidebar
             drafts={drafts}
@@ -453,6 +452,7 @@ function HomeContent() {
             isGenerating={isGenerating}
             onGenerate={generateNews}
             onFileDropped={handleFileDropped}
+            onReset={handleReset}
           />
 
           {/* Output Preview (5 Cols) */}

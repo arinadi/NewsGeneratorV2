@@ -11,22 +11,11 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { apiKey, setApiKey } = useApiKey();
-  const [selectedModel, setSelectedModel] = useState<ModelId>('gemini-3-pro-preview');
-
-  // Load saved model on mount
-  useEffect(() => {
-    const saved = GeminiService.loadSavedModel();
-    if (saved) {
-      setSelectedModel(saved);
-    }
-  }, []);
+  const { apiKey, setApiKey, modelId, setModelId } = useApiKey();
 
   const handleModelChange = (model: ModelId) => {
-    setSelectedModel(model);
-    // Save to localStorage
-    localStorage.setItem('kuli_tinta_model', model);
-    // Update static working model
+    setModelId(model);
+    // Update static working model for non-context services
     GeminiService.loadSavedModel();
   };
 
@@ -100,7 +89,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </label>
             <select
               id="model-select"
-              value={selectedModel}
+              value={modelId}
               onChange={(e) => handleModelChange(e.target.value as ModelId)}
               className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 cursor-pointer text-slate-800"
             >

@@ -18,6 +18,7 @@ interface EditorPanelProps {
   isGenerating: boolean;
   onGenerate: (apiKey: string) => void;
   onFileDropped?: (file: File) => Promise<void>;
+  onReset?: () => void;
 }
 
 export default function EditorPanel({
@@ -28,11 +29,12 @@ export default function EditorPanel({
   isGenerating,
   onGenerate,
   onFileDropped,
+  onReset,
 }: EditorPanelProps) {
   const { apiKey } = useApiKey();
 
   return (
-    <section id="tour-editor-panel" className="lg:col-span-4 space-y-6">
+    <section id="tour-editor-panel" className="lg:col-span-4 space-y-4 md:space-y-6">
       {/* Main Inputs */}
       <div id="tour-input-area" className="space-y-4">
         {/* File Upload Zone */}
@@ -44,7 +46,7 @@ export default function EditorPanel({
 
         {/* Transcript Input */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-          <div className="px-4 py-2 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
+          <div className="px-3 sm:px-4 py-2 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
             <h2 className="text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-1">
               <FileText className="w-3 h-3" />
               Transkrip / Raw Text
@@ -60,7 +62,7 @@ export default function EditorPanel({
           </label>
           <textarea
             id="transcript-input"
-            className="w-full p-4 h-48 text-sm focus:outline-none resize-none bg-transparent"
+            className="w-full p-3 sm:p-4 h-40 sm:h-48 text-sm focus:outline-none resize-none bg-transparent"
             placeholder="Paste hasil transkrip Whisper atau catatan wawancara di sini..."
             value={input.transcript}
             onChange={(e) => setInput({ ...input, transcript: e.target.value })}
@@ -69,7 +71,7 @@ export default function EditorPanel({
 
         {/* Context Input */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-          <div className="px-4 py-2 bg-stone-50 border-b border-stone-100">
+          <div className="px-3 sm:px-4 py-2 bg-stone-50 border-b border-stone-100">
             <h2 className="text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-1">
               <Settings2 className="w-3 h-3" />
               Konteks Tambahan
@@ -80,7 +82,7 @@ export default function EditorPanel({
           </label>
           <textarea
             id="context-input"
-            className="w-full p-4 h-24 text-sm focus:outline-none resize-none bg-transparent"
+            className="w-full p-3 sm:p-4 h-20 sm:h-24 text-sm focus:outline-none resize-none bg-transparent"
             placeholder="Paste undangan WA, siaran pers, atau info tambahan..."
             value={input.context}
             onChange={(e) => setInput({ ...input, context: e.target.value })}
@@ -164,25 +166,39 @@ export default function EditorPanel({
         </div>
       </div>
 
-      {/* Generate Button */}
-      <button
-        id="tour-generate-btn"
-        onClick={() => onGenerate(apiKey)}
-        disabled={isGenerating || !input.transcript}
-        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 disabled:opacity-50"
-      >
-        {isGenerating ? (
-          <>
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            MENYUSUN BERITA...
-          </>
-        ) : (
-          <>
-            <Zap className="w-5 h-5 fill-white" />
-            GENERATE ARTICLE
-          </>
+      {/* Generate Button Section */}
+      <div className="space-y-3">
+        {onReset && (
+          <div className="flex justify-end">
+            <button
+              onClick={onReset}
+              className="text-[10px] font-bold text-stone-400 hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1"
+              title="Reset semua data"
+            >
+              <RefreshCw className="w-3 h-3" />
+              Clear / Reset
+            </button>
+          </div>
         )}
-      </button>
+        <button
+          id="tour-generate-btn"
+          onClick={() => onGenerate(apiKey)}
+          disabled={isGenerating || !input.transcript}
+          className="w-full py-3 sm:py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 disabled:opacity-50"
+        >
+          {isGenerating ? (
+            <>
+              <RefreshCw className="w-5 h-5 animate-spin" />
+              MENYUSUN BERITA...
+            </>
+          ) : (
+            <>
+              <Zap className="w-5 h-5 fill-white" />
+              GENERATE ARTICLE
+            </>
+          )}
+        </button>
+      </div>
     </section>
   );
 }
