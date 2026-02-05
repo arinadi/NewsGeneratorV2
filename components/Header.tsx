@@ -6,9 +6,10 @@ import { useApiKey } from '@/contexts/ApiKeyContext';
 interface HeaderProps {
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
+  onReset?: () => void;
 }
 
-export default function Header({ showSettings, setShowSettings }: HeaderProps) {
+export default function Header({ showSettings, setShowSettings, onReset }: HeaderProps) {
   const { isConnected } = useApiKey();
 
   return (
@@ -27,6 +28,15 @@ export default function Header({ showSettings, setShowSettings }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          {onReset && (
+            <button
+              onClick={onReset}
+              className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors uppercase tracking-wider"
+              title="Reset semua data dan mulai baru"
+            >
+              Clear / Reset
+            </button>
+          )}
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-slate-200' : 'hover:bg-stone-100'

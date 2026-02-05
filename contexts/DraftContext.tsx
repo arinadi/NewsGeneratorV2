@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
-interface Draft {
+export interface Draft {
   id: number;
   timestamp: string;
   title: string;
@@ -13,6 +13,8 @@ interface Draft {
     location: string;
     date: string;
     byline: string;
+    personsInvolved?: string[];
+    source?: 'ai' | 'manual' | 'file';
   };
   settings: {
     angle: string;

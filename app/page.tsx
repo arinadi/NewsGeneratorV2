@@ -9,7 +9,7 @@ import PreviewPanel from '@/components/PreviewPanel';
 import SettingsModal from '@/components/SettingsModal';
 import GlobalDropzone from '@/components/GlobalDropzone';
 import { ApiKeyProvider, useApiKey } from '@/contexts/ApiKeyContext';
-import { DraftProvider, useDrafts } from '@/contexts/DraftContext';
+import { DraftProvider, useDrafts, Draft } from '@/contexts/DraftContext';
 import { createGeminiService } from '@/services/GeminiService';
 import { toast } from 'sonner';
 
@@ -50,13 +50,13 @@ export interface GeneratedResult {
   hashtags: string;
 }
 
-export interface HistoryEntry {
-  id: number;
-  timestamp: string;
-  title: string;
-  content: GeneratedResult;
-  settings: Settings;
-  metadata: Metadata;
+// REMOVED: HistoryEntry (using Draft from context)
+
+
+export interface GeneratedResult {
+  titles: string[];
+  body: string;
+  hashtags: string;
 }
 
 export default function Home() {
@@ -96,6 +96,8 @@ function HomeContent() {
     goal: (searchParams.get('goal') as Goal) || 'google_news',
   }));
 
+
+
   // Sync settings changes to URL
   useEffect(() => {
     const params = new URLSearchParams();
@@ -110,6 +112,7 @@ function HomeContent() {
 
   const [result, setResult] = useState<GeneratedResult | null>(null);
   const [draftId, setDraftId] = useState<number | undefined>(undefined);
+  const { drafts, saveDraft, deleteDraft } = useDrafts(); // Get drafts from context
 
   // Track last saved state to determine if we should create a new draft
   const lastSavedState = useRef<{
@@ -117,38 +120,6 @@ function HomeContent() {
     context: string;
     settings: Settings;
   } | null>(null);
-
-  // Clear draft ID when input substantially changes (optional logic, but good for safety)
-  // For now, we keep it simple. If user clicks "Generate", it's a new flow, but maybe we want to keep updating the same draft?
-  // Let's decide: If generate is clicked, we might treat it as a new draft OR continue editing. 
-  // Better: Reset draftId only when clearing input or starting fresh.
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-
-  // Load history from localStorage on mount
-  useEffect(() => {
-    const savedHistory = localStorage.getItem('kuli_tinta_history');
-    if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error('Failed to parse history:', e);
-      }
-    }
-  }, []);
-
-  const saveToHistory = useCallback((newResult: GeneratedResult) => {
-    const entry: HistoryEntry = {
-      id: Date.now(),
-      timestamp: new Date().toLocaleString('id-ID'),
-      title: newResult.titles[0],
-      content: newResult,
-      settings: { ...settings },
-      metadata: { ...input.metadata },
-    };
-    const updatedHistory = [entry, ...history.slice(0, 19)];
-    setHistory(updatedHistory);
-    localStorage.setItem('kuli_tinta_history', JSON.stringify(updatedHistory));
-  }, [history, settings, input.metadata]);
 
   const handleGetMetadata = useCallback(async (apiKey: string) => {
     if (!input.transcript && !input.context) return;
@@ -222,24 +193,79 @@ function HomeContent() {
       };
 
       setResult(newResult);
-      saveToHistory(newResult);
+      // Removed saveToHistory call
     } catch (error) {
       console.error('News generation failed:', error);
       setGenerateError('Gagal generate berita. Periksa API key dan coba lagi.');
     } finally {
       setIsGenerating(false);
     }
-  }, [input, settings, saveToHistory]);
+  }, [input, settings]);
 
-  const loadFromHistory = useCallback((entry: HistoryEntry) => {
-    setResult(entry.content);
-    setSettings(entry.settings);
-    setInput((prev) => ({ ...prev, metadata: entry.metadata }));
-    // History entries generally don't preserve draft ID or raw transcript unless we add them to HistoryEntry
-    // For now, loading from history effectively starts a "new" session regarding Drafts
-    setDraftId(undefined);
-    lastSavedState.current = null;
-    toast.info('Draft dimuat dari riwayat (Simpan akan membuat draft baru)');
+  const handleLoadDraft = useCallback((draft: Draft) => {
+    // Restore Input
+    setInput({
+      transcript: draft.transcript,
+      context: draft.context,
+      metadata: {
+        ...draft.metadata,
+        personsInvolved: draft.metadata.personsInvolved || [],
+        source: draft.metadata.source || 'manual',
+      },
+    });
+    // Restore Settings
+    setSettings(draft.settings as Settings);
+    // Restore Result
+    // Note: Older drafts might not have 'body'. Handle safely.
+    if (draft.body && draft.headlines) {
+      setResult({
+        titles: draft.headlines, // Map headlines back to titles
+        body: draft.body,
+        hashtags: draft.hashtags || '',
+      });
+    } else {
+      // Fallback if data is missing/corrupted
+      setResult(null);
+    }
+
+    setDraftId(draft.id);
+    lastSavedState.current = {
+      transcript: draft.transcript,
+      context: draft.context,
+      settings: draft.settings as Settings,
+    };
+    toast.info(`Draft loaded: ${draft.title}`);
+  }, []);
+
+  const handleDeleteDraft = useCallback(async (id: number) => {
+    await deleteDraft(id);
+    toast.success('Draft dihapus');
+    if (draftId === id) {
+      // If deleted active draft, maybe reset ID but keep content? 
+      // Or full reset? Let's just reset ID so it becomes a "new" unsaved work.
+      setDraftId(undefined);
+      lastSavedState.current = null;
+    }
+  }, [deleteDraft, draftId]);
+
+  const handleReset = useCallback(() => {
+    if (confirm('Bersihkan halaman dan mulai baru? Data yang belum disimpan akan hilang.')) {
+      setInput({
+        transcript: '',
+        context: '',
+        metadata: {
+          location: '',
+          date: new Date().toISOString().split('T')[0],
+          byline: '',
+          personsInvolved: [],
+          source: 'manual',
+        },
+      });
+      setResult(null);
+      setDraftId(undefined);
+      lastSavedState.current = null;
+      toast.success('Halaman dikosongkan');
+    }
   }, []);
 
   const copyToClipboard = useCallback((text: string) => {
@@ -284,7 +310,7 @@ function HomeContent() {
   }, []);
 
   // Handle save draft
-  const { saveDraft } = useDrafts();
+  // Removed useDrafts call here as it's now top-level
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const handleSaveDraft = useCallback(async () => {
@@ -416,13 +442,15 @@ function HomeContent() {
         <Header
           showSettings={showSettings}
           setShowSettings={setShowSettings}
+          onReset={handleReset}
         />
 
         <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar - History (3 Cols) */}
           <HistorySidebar
-            history={history}
-            onSelectEntry={loadFromHistory}
+            drafts={drafts}
+            onSelectDraft={handleLoadDraft}
+            onDeleteDraft={handleDeleteDraft}
           />
 
           {/* Input & Editor Area (4 Cols) */}
