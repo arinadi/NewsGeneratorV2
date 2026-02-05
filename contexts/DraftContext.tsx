@@ -31,7 +31,7 @@ interface DraftDB extends DBSchema {
 
 interface DraftContextType {
   drafts: Draft[];
-  saveDraft: (draft: Omit<Draft, 'id' | 'timestamp'>) => Promise<number>;
+  saveDraft: (draft: Omit<Draft, 'id' | 'timestamp'> & { id?: number }) => Promise<number>;
   loadDraft: (id: number) => Promise<Draft | undefined>;
   deleteDraft: (id: number) => Promise<void>;
   refreshDrafts: () => Promise<void>;
@@ -70,16 +70,17 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     refreshDrafts();
   }, [refreshDrafts]);
 
-  const saveDraft = async (draftData: Omit<Draft, 'id' | 'timestamp'>): Promise<number> => {
+  const saveDraft = async (draftData: Omit<Draft, 'id' | 'timestamp'> & { id?: number }): Promise<number> => {
     const db = await getDB();
+    const draftId = draftData.id || Date.now();
     const draft: Draft = {
       ...draftData,
-      id: Date.now(),
+      id: draftId,
       timestamp: new Date().toISOString(),
     };
     await db.put('drafts', draft);
     await refreshDrafts();
-    return draft.id;
+    return draftId;
   };
 
   const loadDraft = async (id: number): Promise<Draft | undefined> => {

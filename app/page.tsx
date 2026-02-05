@@ -11,6 +11,7 @@ import GlobalDropzone from '@/components/GlobalDropzone';
 import { ApiKeyProvider, useApiKey } from '@/contexts/ApiKeyContext';
 import { DraftProvider, useDrafts } from '@/contexts/DraftContext';
 import { createGeminiService } from '@/services/GeminiService';
+import { toast } from 'sonner';
 
 // Constants
 export const ANGLES = ['straight', 'impact', 'accountability', 'human_interest'] as const;
@@ -108,6 +109,12 @@ function HomeContent() {
   }, [settings, router, pathname]);
 
   const [result, setResult] = useState<GeneratedResult | null>(null);
+  const [draftId, setDraftId] = useState<number | undefined>(undefined);
+
+  // Clear draft ID when input substantially changes (optional logic, but good for safety)
+  // For now, we keep it simple. If user clicks "Generate", it's a new flow, but maybe we want to keep updating the same draft?
+  // Let's decide: If generate is clicked, we might treat it as a new draft OR continue editing. 
+  // Better: Reset draftId only when clearing input or starting fresh.
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   // Load history from localStorage on mount
@@ -221,6 +228,8 @@ function HomeContent() {
     setResult(entry.content);
     setSettings(entry.settings);
     setInput((prev) => ({ ...prev, metadata: entry.metadata }));
+    setDraftId(entry.id); // Track the active draft ID
+    toast.info('Draft dimuat dari riwayat');
   }, []);
 
   const copyToClipboard = useCallback((text: string) => {
@@ -273,22 +282,24 @@ function HomeContent() {
 
     setIsSavingDraft(true);
     try {
-      await saveDraft({
+      const newId = await saveDraft({
+        id: draftId, // Pass current draft ID (undefined = create new, number = update)
         title: result.titles[0],
         transcript: input.transcript,
         context: input.context,
         metadata: input.metadata,
         settings: settings,
       });
-      // Fallback alert if toast not available or for confirmation
-      alert('Draft berhasil disimpan!');
+
+      setDraftId(newId); // Update active draft ID to the saved one
+      toast.success(draftId ? 'Draft berhasil diperbarui' : 'Draft baru berhasil disimpan');
     } catch (error) {
       console.error('Failed to save draft:', error);
-      alert('Gagal menyimpan draft via IndexedDB');
+      toast.error('Gagal menyimpan draft');
     } finally {
       setIsSavingDraft(false);
     }
-  }, [result, input, settings, saveDraft]);
+  }, [result, input, settings, saveDraft, draftId]);
 
   // Handle file dropped from global dropzone
   const handleFileDropped = useCallback(async (file: File) => {
