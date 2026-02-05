@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Header from '@/components/Header';
 import HistorySidebar from '@/components/HistorySidebar';
@@ -110,6 +110,13 @@ function HomeContent() {
 
   const [result, setResult] = useState<GeneratedResult | null>(null);
   const [draftId, setDraftId] = useState<number | undefined>(undefined);
+
+  // Track last saved state to determine if we should create a new draft
+  const lastSavedState = useRef<{
+    transcript: string;
+    context: string;
+    settings: Settings;
+  } | null>(null);
 
   // Clear draft ID when input substantially changes (optional logic, but good for safety)
   // For now, we keep it simple. If user clicks "Generate", it's a new flow, but maybe we want to keep updating the same draft?
@@ -228,8 +235,11 @@ function HomeContent() {
     setResult(entry.content);
     setSettings(entry.settings);
     setInput((prev) => ({ ...prev, metadata: entry.metadata }));
-    setDraftId(entry.id); // Track the active draft ID
-    toast.info('Draft dimuat dari riwayat');
+    // History entries generally don't preserve draft ID or raw transcript unless we add them to HistoryEntry
+    // For now, loading from history effectively starts a "new" session regarding Drafts
+    setDraftId(undefined);
+    lastSavedState.current = null;
+    toast.info('Draft dimuat dari riwayat (Simpan akan membuat draft baru)');
   }, []);
 
   const copyToClipboard = useCallback((text: string) => {
@@ -282,17 +292,51 @@ function HomeContent() {
 
     setIsSavingDraft(true);
     try {
+      // Check if critical inputs changed
+      const currentInputState = {
+        transcript: input.transcript,
+        context: input.context,
+        settings: settings
+      };
+
+      let targetDraftId = draftId;
+      let isNewDraft = false;
+
+      // Smart Logic: If we have a saved state and inputs changed, force new draft
+      if (lastSavedState.current) {
+        const prev = lastSavedState.current;
+        const hasInputChanged =
+          prev.transcript !== input.transcript ||
+          prev.context !== input.context ||
+          JSON.stringify(prev.settings) !== JSON.stringify(settings);
+
+        if (hasInputChanged) {
+          targetDraftId = undefined; // Force create new
+          isNewDraft = true;
+        }
+      }
+
       const newId = await saveDraft({
-        id: draftId, // Pass current draft ID (undefined = create new, number = update)
+        id: targetDraftId, // Pass target ID (undefined = create new, number = update)
         title: result.titles[0],
         transcript: input.transcript,
         context: input.context,
         metadata: input.metadata,
         settings: settings,
+        body: result.body, // Ensure body is saved too (Draft interface usually has it)
+        headlines: result.titles, // Save all titles if schema allows, otherwise ensure 'title' is primary
+        hashtags: result.hashtags
       });
 
-      setDraftId(newId); // Update active draft ID to the saved one
-      toast.success(draftId ? 'Draft berhasil diperbarui' : 'Draft baru berhasil disimpan');
+      setDraftId(newId);
+      // Update last saved state
+      lastSavedState.current = currentInputState;
+
+      if (isNewDraft) {
+        toast.success(`Perubahan terdeteksi. Disimpan sebagai Draft Baru #${newId}`);
+      } else {
+        toast.success(targetDraftId ? 'Draft berhasil diperbarui' : 'Draft baru berhasil disimpan');
+      }
     } catch (error) {
       console.error('Failed to save draft:', error);
       toast.error('Gagal menyimpan draft');

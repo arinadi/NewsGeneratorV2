@@ -19,6 +19,9 @@ interface Draft {
     style: string;
     goal: string;
   };
+  body?: string;
+  hashtags?: string;
+  headlines?: string[];
 }
 
 interface DraftDB extends DBSchema {
