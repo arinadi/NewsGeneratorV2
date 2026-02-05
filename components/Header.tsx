@@ -1,21 +1,22 @@
 'use client';
 
-import { Newspaper, Settings2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Newspaper, Settings2, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
 import { useApiKey } from '@/contexts/ApiKeyContext';
 
 interface HeaderProps {
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
   onReset?: () => void;
+  onStartTour?: () => void;
 }
 
-export default function Header({ showSettings, setShowSettings, onReset }: HeaderProps) {
+export default function Header({ showSettings, setShowSettings, onReset, onStartTour }: HeaderProps) {
   const { isConnected } = useApiKey();
 
   return (
     <header className="sticky top-0 z-40 glass border-b border-stone-200">
       <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" id="header-logo">
           <div className="bg-slate-900 p-1.5 rounded-lg">
             <Newspaper className="text-white w-6 h-6" />
           </div>
@@ -37,8 +38,19 @@ export default function Header({ showSettings, setShowSettings, onReset }: Heade
               Clear / Reset
             </button>
           )}
+          {onStartTour && (
+            <button
+              onClick={onStartTour}
+              id="header-help-btn"
+              className="p-2 hover:bg-stone-100 rounded-full text-slate-400 hover:text-blue-600 transition-colors"
+              title="Mulai Tour / Bantuan"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+          )}
           <button
             onClick={() => setShowSettings(!showSettings)}
+            id="header-settings"
             className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-slate-200' : 'hover:bg-stone-100'
               }`}
             aria-label="Settings"

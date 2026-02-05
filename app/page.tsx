@@ -12,6 +12,7 @@ import { ApiKeyProvider, useApiKey } from '@/contexts/ApiKeyContext';
 import { DraftProvider, useDrafts, Draft } from '@/contexts/DraftContext';
 import { createGeminiService } from '@/services/GeminiService';
 import { toast } from 'sonner';
+import TourGuide from '@/components/TourGuide';
 
 // Constants
 export const ANGLES = ['straight', 'impact', 'accountability', 'human_interest'] as const;
@@ -74,7 +75,6 @@ function HomeContent() {
 
   const [showSettings, setShowSettings] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isExtractingMeta, setIsExtractingMeta] = useState(false);
 
   const [input, setInput] = useState<InputState>({
     transcript: '',
@@ -87,7 +87,9 @@ function HomeContent() {
       source: 'manual',
     },
   });
-  const [metadataError, setMetadataError] = useState<string | null>(null);
+
+  // Tour State
+  const [startTour, setStartTour] = useState(false);
 
   // Initialize settings from URL params or defaults
   const [settings, setSettings] = useState<Settings>(() => ({
@@ -121,39 +123,6 @@ function HomeContent() {
     settings: Settings;
   } | null>(null);
 
-  const handleGetMetadata = useCallback(async (apiKey: string) => {
-    if (!input.transcript && !input.context) return;
-    if (!apiKey) {
-      setMetadataError('API Key diperlukan. Silakan atur di Settings.');
-      return;
-    }
-
-    setIsExtractingMeta(true);
-    setMetadataError(null);
-
-    try {
-      const gemini = createGeminiService(apiKey);
-      // Combine transcript AND context for better metadata extraction
-      const textToAnalyze = [input.transcript, input.context].filter(Boolean).join('\n\n---\nKONTEKS TAMBAHAN:\n');
-      const extracted = await gemini.extractMetadata(textToAnalyze);
-
-      setInput((prev) => ({
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          location: extracted.location || prev.metadata.location,
-          date: extracted.date || prev.metadata.date,
-          personsInvolved: extracted.personsInvolved,
-          source: 'ai',
-        },
-      }));
-    } catch (error) {
-      console.error('Metadata extraction failed:', error);
-      setMetadataError('Gagal mengekstrak metadata. Silakan coba lagi.');
-    } finally {
-      setIsExtractingMeta(false);
-    }
-  }, [input.transcript, input.context]);
 
   const [generateError, setGenerateError] = useState<string | null>(null);
 
@@ -443,6 +412,7 @@ function HomeContent() {
           showSettings={showSettings}
           setShowSettings={setShowSettings}
           onReset={handleReset}
+          onStartTour={() => setStartTour(true)}
         />
 
         <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -459,10 +429,7 @@ function HomeContent() {
             setInput={setInput}
             settings={settings}
             setSettings={setSettings}
-            isExtractingMeta={isExtractingMeta}
             isGenerating={isGenerating}
-            metadataError={metadataError}
-            onGetMetadata={handleGetMetadata}
             onGenerate={generateNews}
             onFileDropped={handleFileDropped}
           />
@@ -485,6 +452,12 @@ function HomeContent() {
         <SettingsModal
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}
+        />
+
+        {/* Tour Guide */}
+        <TourGuide
+          startManually={startTour}
+          onClose={() => setStartTour(false)}
         />
       </div>
     </GlobalDropzone>

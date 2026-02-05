@@ -104,7 +104,7 @@ export default function HistorySidebar({ drafts, onSelectDraft, onDeleteDraft }:
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="lg:col-span-3 space-y-6 hidden lg:block sticky top-24 h-fit">
+      <aside id="tour-history-sidebar" className="lg:col-span-3 space-y-6 hidden lg:block sticky top-24 h-fit">
         {/* Draft List */}
         <div className="glass rounded-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[calc(100vh-120px)]">
           <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between shrink-0">

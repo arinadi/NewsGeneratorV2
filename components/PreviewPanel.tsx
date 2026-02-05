@@ -164,7 +164,7 @@ export default function PreviewPanel({
   };
 
   return (
-    <section className="lg:col-span-5 relative" ref={containerRef}>
+    <section id="tour-preview-panel" className="lg:col-span-5 relative" ref={containerRef}>
       <div className="bg-paper-light border border-stone-300 shadow-2xl rounded-sm p-8 sm:p-12 min-h-screen relative overflow-hidden print:shadow-none print:border-none">
         {/* Newspaper Texture Overlay */}
         <div
