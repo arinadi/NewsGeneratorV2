@@ -436,6 +436,7 @@ function HomeContent() {
             metadataError={metadataError}
             onGetMetadata={handleGetMetadata}
             onGenerate={generateNews}
+            onFileDropped={handleFileDropped}
           />
 
           {/* Output Preview (5 Cols) */}

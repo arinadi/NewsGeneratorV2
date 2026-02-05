@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Newspaper, Copy, Download, Printer, RefreshCw, Save, Loader2, Check, Pencil, X } from 'lucide-react';
 import { GeneratedResult, Metadata } from '@/app/page';
 
@@ -32,6 +32,21 @@ export default function PreviewPanel({
   const [isRegenHashtags, setIsRegenHashtags] = useState(false);
   const [copyState, setCopyState] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close editor (save)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node) && isEditing) {
+        setIsEditing(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditing]);
 
   const handleCopyFeedback = (section: string) => {
     setCopyState(section);
@@ -149,7 +164,7 @@ export default function PreviewPanel({
   };
 
   return (
-    <section className="lg:col-span-5 relative">
+    <section className="lg:col-span-5 relative" ref={containerRef}>
       <div className="bg-paper-light border border-stone-300 shadow-2xl rounded-sm p-8 sm:p-12 min-h-screen relative overflow-hidden print:shadow-none print:border-none">
         {/* Newspaper Texture Overlay */}
         <div
@@ -279,10 +294,12 @@ export default function PreviewPanel({
                 />
               ) : (
                 <h2
-                  className={`font-headline leading-tight mb-1 ${idx === 0
+                  onDoubleClick={() => setIsEditing(true)}
+                  className={`font-headline leading-tight mb-1 cursor-text ${idx === 0
                     ? 'text-3xl font-bold text-slate-900'
                     : 'text-xl font-semibold text-slate-600'
                     }`}
+                  title="Double click to edit"
                 >
                   {t}
                 </h2>
@@ -351,7 +368,11 @@ export default function PreviewPanel({
                 className="w-full h-[600px] p-4 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap resize-y"
               />
             ) : (
-              <p className="text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap drop-cap">
+              <p
+                onDoubleClick={() => setIsEditing(true)}
+                className="text-lg leading-relaxed font-serif text-slate-800 whitespace-pre-wrap drop-cap cursor-text"
+                title="Double click to edit"
+              >
                 {result.body}
               </p>
             )}

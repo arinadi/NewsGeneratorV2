@@ -4,11 +4,12 @@ import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, X, Loader2 } from 'lucide-react';
 
 interface FileUploadZoneProps {
-  onTextExtracted: (text: string, fileName: string) => void;
+  onTextExtracted?: (text: string, fileName: string) => void;
+  onFileSelected?: (file: File) => void;
   className?: string;
 }
 
-export default function FileUploadZone({ onTextExtracted, className = '' }: FileUploadZoneProps) {
+export default function FileUploadZone({ onTextExtracted, onFileSelected, className = '' }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentFile, setCurrentFile] = useState<string | null>(null);
@@ -19,6 +20,27 @@ export default function FileUploadZone({ onTextExtracted, className = '' }: File
     setIsProcessing(true);
     setError(null);
     setCurrentFile(file.name);
+
+    // Priority: If parent wants the raw file, give it to them
+    if (onFileSelected) {
+      try {
+        await onFileSelected(file);
+        setIsProcessing(false);
+        return;
+      } catch (err) {
+        // If parent fails, we might want to show error or fallback
+        console.error('External file handling failed:', err);
+        setError('Gagal memproses file.');
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    // Fallback: Internal processing (legacy)
+    if (!onTextExtracted) {
+      setIsProcessing(false);
+      return;
+    }
 
     try {
       const extension = file.name.split('.').pop()?.toLowerCase();
@@ -32,10 +54,10 @@ export default function FileUploadZone({ onTextExtracted, className = '' }: File
         try {
           const pdfjsLib = await import('pdfjs-dist');
           pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-          
+
           const arrayBuffer = await file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-          
+
           let fullText = '';
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
@@ -45,7 +67,7 @@ export default function FileUploadZone({ onTextExtracted, className = '' }: File
               .join(' ');
             fullText += pageText + '\n\n';
           }
-          
+
           onTextExtracted(fullText.trim(), file.name);
         } catch (pdfError) {
           console.error('PDF parsing error:', pdfError);
@@ -71,7 +93,7 @@ export default function FileUploadZone({ onTextExtracted, className = '' }: File
     } finally {
       setIsProcessing(false);
     }
-  }, [onTextExtracted]);
+  }, [onTextExtracted, onFileSelected]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -124,7 +146,7 @@ export default function FileUploadZone({ onTextExtracted, className = '' }: File
         onChange={handleFileSelect}
         className="hidden"
       />
-      
+
       <div
         onClick={handleClick}
         onDragOver={handleDragOver}
@@ -134,8 +156,8 @@ export default function FileUploadZone({ onTextExtracted, className = '' }: File
           relative cursor-pointer transition-all duration-200
           border-2 border-dashed rounded-xl p-4
           flex items-center justify-center gap-3
-          ${isDragging 
-            ? 'border-blue-500 bg-blue-50' 
+          ${isDragging
+            ? 'border-blue-500 bg-blue-50'
             : 'border-stone-200 hover:border-blue-400 hover:bg-stone-50'
           }
           ${isProcessing ? 'pointer-events-none opacity-60' : ''}

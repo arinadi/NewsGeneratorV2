@@ -26,6 +26,7 @@ interface EditorPanelProps {
   metadataError?: string | null;
   onGetMetadata: (apiKey: string) => void;
   onGenerate: (apiKey: string) => void;
+  onFileDropped?: (file: File) => Promise<void>;
 }
 
 export default function EditorPanel({
@@ -38,6 +39,7 @@ export default function EditorPanel({
   metadataError,
   onGetMetadata,
   onGenerate,
+  onFileDropped,
 }: EditorPanelProps) {
   const { apiKey } = useApiKey();
 
@@ -55,6 +57,7 @@ export default function EditorPanel({
         {/* File Upload Zone */}
         <FileUploadZone
           onTextExtracted={(text) => setInput({ ...input, transcript: text })}
+          onFileSelected={onFileDropped}
           className="mb-2"
         />
 
