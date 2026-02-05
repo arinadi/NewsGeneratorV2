@@ -9,7 +9,7 @@ import PreviewPanel from '@/components/PreviewPanel';
 import SettingsModal from '@/components/SettingsModal';
 import GlobalDropzone from '@/components/GlobalDropzone';
 import { ApiKeyProvider, useApiKey } from '@/contexts/ApiKeyContext';
-import { DraftProvider } from '@/contexts/DraftContext';
+import { DraftProvider, useDrafts } from '@/contexts/DraftContext';
 import { createGeminiService } from '@/services/GeminiService';
 
 // Constants
@@ -260,6 +260,36 @@ function HomeContent() {
     setResult({ ...result, hashtags: newHashtags });
   }, [result]);
 
+  const handleUpdateResult = useCallback((newResult: GeneratedResult) => {
+    setResult(newResult);
+  }, []);
+
+  // Handle save draft
+  const { saveDraft } = useDrafts();
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  const handleSaveDraft = useCallback(async () => {
+    if (!result) return;
+
+    setIsSavingDraft(true);
+    try {
+      await saveDraft({
+        title: result.titles[0],
+        transcript: input.transcript,
+        context: input.context,
+        metadata: input.metadata,
+        settings: settings,
+      });
+      // Fallback alert if toast not available or for confirmation
+      alert('Draft berhasil disimpan!');
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      alert('Gagal menyimpan draft via IndexedDB');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [result, input, settings, saveDraft]);
+
   // Handle file dropped from global dropzone
   const handleFileDropped = useCallback(async (file: File) => {
     const extension = file.name.split('.').pop()?.toLowerCase();
@@ -326,54 +356,53 @@ function HomeContent() {
   }, []);
 
   return (
-    <ApiKeyProvider>
-      <DraftProvider>
-        <GlobalDropzone onFileDropped={handleFileDropped}>
-          <div className="min-h-screen bg-paper">
-            <Header
-              showSettings={showSettings}
-              setShowSettings={setShowSettings}
-            />
+    <GlobalDropzone onFileDropped={handleFileDropped}>
+      <div className="min-h-screen bg-paper">
+        <Header
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+        />
 
-            <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Sidebar - History (3 Cols) */}
-              <HistorySidebar
-                history={history}
-                onSelectEntry={loadFromHistory}
-              />
+        <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Sidebar - History (3 Cols) */}
+          <HistorySidebar
+            history={history}
+            onSelectEntry={loadFromHistory}
+          />
 
-              {/* Input & Editor Area (4 Cols) */}
-              <EditorPanel
-                input={input}
-                setInput={setInput}
-                settings={settings}
-                setSettings={setSettings}
-                isExtractingMeta={isExtractingMeta}
-                isGenerating={isGenerating}
-                metadataError={metadataError}
-                onGetMetadata={handleGetMetadata}
-                onGenerate={generateNews}
-              />
+          {/* Input & Editor Area (4 Cols) */}
+          <EditorPanel
+            input={input}
+            setInput={setInput}
+            settings={settings}
+            setSettings={setSettings}
+            isExtractingMeta={isExtractingMeta}
+            isGenerating={isGenerating}
+            metadataError={metadataError}
+            onGetMetadata={handleGetMetadata}
+            onGenerate={generateNews}
+          />
 
-              {/* Output Preview (5 Cols) */}
-              <PreviewPanel
-                result={result}
-                metadata={input.metadata}
-                onCopy={copyToClipboard}
-                onRegenTitles={handleRegenTitles}
-                onRegenBody={handleRegenBody}
-                onRegenHashtags={handleRegenHashtags}
-              />
-            </main>
+          {/* Output Preview (5 Cols) */}
+          <PreviewPanel
+            result={result}
+            metadata={input.metadata}
+            onCopy={copyToClipboard}
+            onRegenTitles={handleRegenTitles}
+            onRegenBody={handleRegenBody}
+            onRegenHashtags={handleRegenHashtags}
+            onSaveDraft={handleSaveDraft}
+            isSavingDraft={isSavingDraft}
+            onUpdateResult={handleUpdateResult}
+          />
+        </main>
 
-            {/* Settings Modal */}
-            <SettingsModal
-              isOpen={showSettings}
-              onClose={() => setShowSettings(false)}
-            />
-          </div>
-        </GlobalDropzone>
-      </DraftProvider>
-    </ApiKeyProvider>
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      </div>
+    </GlobalDropzone>
   );
 }

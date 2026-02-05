@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
+import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
   title: 'Kuli Tinta AI - News Generator',
@@ -35,8 +36,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className="min-h-screen bg-paper text-slate-900 font-sans selection:bg-stone-300 antialiased">
-        <ServiceWorkerRegistration />
-        {children}
+        <Providers>
+          <ServiceWorkerRegistration />
+          {children}
+        </Providers>
       </body>
     </html>
   );
