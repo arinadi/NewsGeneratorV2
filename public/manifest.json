@@ -40,5 +40,29 @@
         "productivity",
         "news",
         "utilities"
+    ],
+    "share_target": {
+        "action": "/",
+        "method": "GET",
+        "enctype": "application/x-www-form-urlencoded",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    },
+    "shortcuts": [
+        {
+            "name": "New Draft",
+            "short_name": "New",
+            "description": "Start a new news draft",
+            "url": "/?new=true",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
     ]
 }

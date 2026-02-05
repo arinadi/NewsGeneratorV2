@@ -16,6 +16,8 @@ import TourGuide from '@/components/TourGuide';
 
 import { InputState, Settings, GeneratedResult, Angle, Style, Goal, ANGLES, STYLES, GOALS } from '@/lib/types';
 
+// Note: handleReset is used in the Share Target effect, ensure it's defined before or effect is placed after.
+// In this file, we'll place the Share Target effect AFTER handleReset is defined.
 export default function Home() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-paper" />}>
@@ -64,9 +66,20 @@ function HomeContent() {
     if (settings.goal !== 'google_news') params.set('goal', settings.goal);
 
     const queryString = params.toString();
-    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
-    router.replace(newUrl, { scroll: false });
-  }, [settings, router, pathname]);
+    const currentString = searchParams.toString();
+
+    // Only replace if:
+    // 1. Not handling incoming share/shortcut
+    // 2. The query params actually CHANGED (prevents infinite loop due to searchParams dependency)
+    if (!searchParams.get('text') && !searchParams.get('url') && !searchParams.get('title') && !searchParams.get('new')) {
+      if (queryString !== currentString) {
+        const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+        router.replace(newUrl, { scroll: false });
+      }
+    }
+  }, [settings, router, pathname, searchParams]);
+
+
 
   const [result, setResult] = useState<GeneratedResult | null>(null);
   const [draftId, setDraftId] = useState<number | undefined>(undefined);
@@ -208,6 +221,42 @@ function HomeContent() {
       toast.success('Halaman dikosongkan');
     }
   }, []);
+
+  // Handle Share Target & Shortcuts (Initial Load)
+  // Moved here to ensure handleReset is defined
+  useEffect(() => {
+    const title = searchParams.get('title');
+    const text = searchParams.get('text');
+    const url = searchParams.get('url');
+    const isNew = searchParams.get('new') === 'true';
+
+    // Handle "New Draft" Shortcut
+    if (isNew) {
+      handleReset();
+      // Remove param
+      router.replace(pathname);
+      return;
+    }
+
+    // Handle Share Target
+    if (title || text || url) {
+      const sharedContent = [
+        title ? `Title: ${title}` : '',
+        text ? `Text: ${text}` : '',
+        url ? `URL: ${url}` : ''
+      ].filter(Boolean).join('\n\n');
+
+      if (sharedContent) {
+        setInput(prev => ({
+          ...prev,
+          context: prev.context ? `${prev.context}\n\n-- Shared Content --\n${sharedContent}` : sharedContent
+        }));
+        toast.success('Konten dari share diterima');
+        // Clean URL
+        router.replace(pathname);
+      }
+    }
+  }, [searchParams, pathname, router, handleReset]);
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
