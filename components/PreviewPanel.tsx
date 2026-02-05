@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Newspaper, Copy, Download, Printer, RefreshCw, Save, Loader2, Check, Pencil, X } from 'lucide-react';
-import { GeneratedResult, Metadata } from '@/app/page';
+import { GeneratedResult, Metadata } from '@/lib/types';
 
 interface PreviewPanelProps {
   result: GeneratedResult | null;

@@ -7,7 +7,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useApiKey } from '@/contexts/ApiKeyContext';
-import { InputState, Settings, ANGLES, STYLES, GOALS } from '@/app/page';
+import { InputState, Settings, ANGLES, STYLES, GOALS } from '@/lib/types';
 import FileUploadZone from './FileUploadZone';
 
 interface EditorPanelProps {

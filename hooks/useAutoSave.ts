@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useDrafts } from '@/contexts/DraftContext';
-import { InputState, Settings } from '@/app/page';
+import { InputState, Settings } from '@/lib/types';
 
 interface AutoSaveOptions {
   input: InputState;
